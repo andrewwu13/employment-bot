@@ -1,0 +1,26 @@
+{
+  "name": "employment-bot",
+  "version": "1.0.0",
+  "description": "Discord bot to automate job postings and streamline the application process.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrewwu13/employment-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/andrewwu13/employment-bot/issues"
+  },
+  "homepage": "https://github.com/andrewwu13/employment-bot#readme",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "discord.js": "^14.24.2",
+    "dotenv": "^17.2.3"
+  }
+}
