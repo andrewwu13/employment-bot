@@ -6,13 +6,14 @@ Built using Node.js, Playwright and JavaScript.
 ## Running the App Locally
 ### Prerequisites
 - [ ] Node 20 or higher
+- [ ] Environment Variables (from Discord SDK, you need a TOKEN, APPLICATION_ID, and PUBLIC_KEY )
 
-### Install Dependencies
+### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### Run Using Node
+### 2. Run Using Node
 ```bash
 node src/index
 ```
