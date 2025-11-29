@@ -7,7 +7,7 @@ import { collection, addDoc } from 'firebase/firestore';
 export async function scrape(jobPostings) {
   /**
    * Scrapes a website and returns the page title and text of a specific element.
-   * @param {object} jobPostings - An object containting the company title, and the job posting link. 
+   * @param {object} jobPostings - An object containing the company title, and the job posting link. 
    */
   const browser = await chromium.launch();
 
