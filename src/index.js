@@ -4,6 +4,7 @@ import { REST, Routes } from 'discord.js';
 //import { commands } from './commands.js';
 import { scrape } from './services/scrapeService.js';
 
+
 const commands = [
   {
     name: 'ping',
