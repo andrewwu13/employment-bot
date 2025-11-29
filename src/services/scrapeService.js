@@ -17,9 +17,10 @@ export async function scrape(jobPostings) {
   });
 
   for (let posting of jobPostings) {
+    let page;
     try {
       console.log(`Scraping job posting for ${posting.company} at ${posting.postingLink}`);
-      const page = await context.newPage();
+      page = await context.newPage();
       await page.goto(posting.postingLink, { waitUntil: 'domcontentloaded' });
 
       const pageTitle = await page.title()
@@ -35,6 +36,10 @@ export async function scrape(jobPostings) {
     } catch (error) {
       console.error(`Error scraping ${posting.company}:`, error.message);
       // Continue to next posting even if this one fails
+    } finally {
+      if (page) {
+        await page.close();
+      }
     }
   }
 
