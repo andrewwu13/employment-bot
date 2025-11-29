@@ -2,7 +2,7 @@ import 'dotenv/config.js'
 import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { REST, Routes } from 'discord.js';
 //import { commands } from './commands.js';
-import { scrape } from './scrape_service.js';
+import { scrape } from './services/scrapeService.js';
 
 const commands = [
   {
