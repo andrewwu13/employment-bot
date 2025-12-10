@@ -42,6 +42,11 @@ export async function fetchUnreadEmails() {
       snippet: detail.data.snippet,
       body: body,
     });
+    await gmail.users.messages.modify({
+      userId: "me",
+      id: msg.id,
+      requestBody: { removeLabelIds: ["UNREAD"] }
+    });
   }
   return emails;
 }

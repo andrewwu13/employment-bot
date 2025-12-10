@@ -26,6 +26,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "googleapis": "^166.0.0",
+    "node-cron": "^4.2.1",
     "playwright": "^1.56.1"
   },
   "devDependencies": {
