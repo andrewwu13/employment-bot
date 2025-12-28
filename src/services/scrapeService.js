@@ -10,11 +10,11 @@ export async function scrape() {
   // initializing new job scraper
   const scraper = new JobScraper();
 
-  scraper.scrape(mockPostings[0].postingLink)
+  scraper.scrape("https://jobs.ea.com/en_US/careers/JobDetail/Software-Development-Intern/210913?utm_source=Simplify&ref=Simplify&src=Simplify");
 
 }
 
-async function addDbEntry(data) {
+export async function addDbEntry(data) {
   /**
    * Adds an entry to the Firestore database.
    * @param {object} data - The data to be added to the database.
