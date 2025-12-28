@@ -6,5 +6,9 @@ export const commands = [
   {
     name: 'scrape',
     description: 'scrapes website'
+  },
+  {
+    name: 'mail',
+    description: 'fetches latest emails'
   }
 ];
