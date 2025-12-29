@@ -3,45 +3,18 @@ import { chromium } from 'playwright';
 import { mockPostings } from './mockData.js';
 import { db } from '../config/firebaseConfig.js';
 import { collection, addDoc } from 'firebase/firestore';
+import { JobScraper } from './jobScraper.js';
 
-export async function scrape(jobPostings) {
-  /**
-   * Scrapes a website and returns the page title and text of a specific element.
-   * @param {object} jobPostings - An object containing the company title, and the job posting link. 
-   */
-  const browser = await chromium.launch();
+export async function scrape() {
 
-  // setting up a user agent to avoid detection 
-  const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-  });
+  // initializing new job scraper
+  const scraper = new JobScraper();
 
-  for (let posting of jobPostings) {
-    try {
-      console.log(`Scraping job posting for ${posting.company} at ${posting.postingLink}`);
-      const page = await context.newPage();
-      await page.goto(posting.postingLink, { waitUntil: 'domcontentloaded' });
+  scraper.scrape("https://jobs.ea.com/en_US/careers/JobDetail/Software-Development-Intern/210913?utm_source=Simplify&ref=Simplify&src=Simplify");
 
-      const pageTitle = await page.title()
-      console.log(pageTitle)
-
-      const elementText = await page.$eval('h1', el => el.textContent); 
-      console.log(elementText);
-
-      console.log(pageTitle, elementText);
-
-      addDbEntry({ company: posting.company, postingLink: posting.postingLink, title: pageTitle, content: elementText });
-
-    } catch (error) {
-      console.error(`Error scraping ${posting.company}:`, error.message);
-      // Continue to next posting even if this one fails
-    }
-  }
-
-  await browser.close();
 }
 
-async function addDbEntry(data) {
+export async function addDbEntry(data) {
   /**
    * Adds an entry to the Firestore database.
    * @param {object} data - The data to be added to the database.
