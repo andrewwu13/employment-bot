@@ -4,9 +4,42 @@ import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { REST, Routes } from 'discord.js';
 //import { commands } from './commands.js';
 import { scrape } from './services/scrapeService.js';
-import { fetchUnreadEmails } from './controllers/gmail.js';
+import { fetchUnreadEmails, cleanEmails } from './controllers/gmail.js';
+import { createJobEmbed } from './utils/createEmbed.js'
 
 
+// Helper debug function: logs embed size and fields info
+function debugEmbedSize(stage, embed, index = null) {
+  const size =
+    (embed.title?.length || 0) +
+    (embed.description?.length || 0) +
+    (Array.isArray(embed.fields)
+      ? embed.fields.reduce(
+          (sum, f) =>
+            sum + (f.name?.length || 0) + (f.value?.length || 0),
+          0
+        )
+      : 0);
+
+  const fieldCount = embed.fields?.length || 0;
+
+  console.log(
+    `[DEBUG] ${stage}` +
+      (index !== null ? ` [${index}]` : "") +
+      ` | fields=${fieldCount} | size=${size}`
+  );
+
+  if (Array.isArray(embed.fields)) {
+    embed.fields.forEach((f, i) => {
+      const fs = (f.name?.length || 0) + (f.value?.length || 0);
+      if (fs > 1024) {
+        console.log(
+          `[DEBUG]   Field ${i} exceeds 1024 chars (${fs}) | name="${f.name}"`
+        );
+      }
+    });
+  }
+}
 
 const commands = [
   {
@@ -46,33 +79,43 @@ client.once(Events.ClientReady, (c) => {
   console.log(`Ready! Logged in as ${c.user.tag}`);
   // cron job
   cron.schedule("* * * * *", async () => {
+    // run hourly at the top of the hour (minute 0)
     const now = new Date();
-    console.log(`Running hourly email checker | ${now.getHours}:${now.getMinutes}`);
+    const hours = now.getHours();
+    const min = now.getMinutes();
+    const seconds = now.getSeconds();
+    const milliseconds = now.getMilliseconds();
 
+    const hh = String(hours).padStart(2, '0');
+    const mm = String(min).padStart(2, '0');
+    const ss = String(seconds).padStart(2,'0');
+    const ms = String(milliseconds).padStart(2,'0');
+
+    console.log(`Running hourly email checker | ${hh}:${mm}:${ss}:${ms}`);
+
+    const recipient = "no-reply@notify.careers";
+    
     try {
-      const emails = await fetchUnreadEmails();
-      if (!emails.length) return;
-      // Channel ID where bot should auto send job alerts to
+      const rawEmails = await fetchUnreadEmails(recipient);
+      const discordReady = await cleanEmails(rawEmails);
+      if (!discordReady.length) {
+        console.log("No new job emails found -- nothing sent to Discord.");
+        return;
+      }
+      // Since cleanEmails now returns embeds already batched by 10, send directly
       const channel = await client.channels.fetch(process.env.JOB_CHANNEL_ID);
 
-      for (const e of emails) {
-        await channel.send({
-          embeds: [
-            {
-              title: e.subject || "No Subject",
-              description: e.snippet || "No snippet",
-              fields: [
-                { name: "From", value: e.from || "Unknown"},
-                { name: "Date", value: e.date || "Unknown"},
-              ],
-            },
-          ],
-        });
+      for (let i = 0; i < discordReady.length; i++) {
+        debugEmbedSize("before-send", discordReady[i], i);
+        await channel.send({ embeds: [discordReady[i]] });
+        console.log(`Sent job posting batch ${i + 1}/${discordReady.length}`);
       }
-      console.log(`Sent ${emails.length} new job postings to Discord`)
+      console.log(`All batches sent.`)
     } catch (error) {
       console.error("Error running hourly email check: ", error)
     }
+  }, {
+    timezone: "America/Toronto"
   });
 });
 
@@ -97,16 +140,12 @@ client.on(Events.InteractionCreate, async interaction => {
         return;
       }
 
+      // Use createJobEmbed for all email embeds
+      const embeds = emails.map(e => createJobEmbed(e));
+
       await interaction.reply({
         content: "Here are the latest job alerts:",
-        embeds: emails.map(e => ({
-          title: e.subject || "No Subject",
-          description: e.snippet || "No snippet",
-          fields: [
-            { name: "From", value: e.from || "Unknown" },
-            { name: "Date", value: e.date || "Unknown" },
-          ],
-        }))
+        embeds: embeds
       });
     } catch (err) {
       console.error(err);

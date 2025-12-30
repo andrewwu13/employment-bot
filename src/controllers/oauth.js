@@ -10,7 +10,7 @@ const PORT = 3000;
 const oauth2Client = new google.auth.OAuth2(
   process.env.GMAIL_CLIENT_ID,
   process.env.GMAIL_CLIENT_SECRET,
-  ''
+  'http://localhost:3000/oauth2callback'
 );
 
 app.get("/auth", (req, res) => {
