@@ -1,4 +1,4 @@
-import { JobScraper } from "../services/jobScraper.js";
+import { JobScraper } from "../../backend/services/JobScraper.js";
 
 /**
  * Creates a Discord embed object for a batch of job postings.
