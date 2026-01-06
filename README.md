@@ -14,6 +14,11 @@ npm install
 ```
 
 ### 2. Run Using Node + Nodemon
+Get new gmail refresh token
+```bash
+node src/controllers/oauth.js
+```
+Then, visit http://localhost:3000/auth, and sign into google account. Enter refresh token into .env file
 ```bash
 npm run dev
 ```
