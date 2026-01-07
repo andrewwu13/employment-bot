@@ -1,6 +1,6 @@
 import express from "express";
 import { google } from "googleapis";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -43,6 +43,8 @@ app.get("/oauth2callback", async (req, res) => {
     res.status(500).send("Error retrieving tokens. Check console.");
   }
 });
+
 app.listen(PORT, () => console.log(`OAuth server running on ${PORT}`))
+
 console.log("CLIENT ID:", process.env.GMAIL_CLIENT_ID);
 console.log("CLIENT SECRET:", process.env.GMAIL_CLIENT_SECRET);
