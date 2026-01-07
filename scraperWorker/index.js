@@ -13,19 +13,20 @@ const scraper = new JobScraper();
 
 const scrapeService = new ScrapeService(gmailService, dbService, scraper, 2000);
 
-//cron.schedule('*/30 * * * * *', async () => {
-//    console.log('\n[scraperWorker] Starting scheduled scrape job...');  
-//    scrapeService.runCron().then(() => {
-//        console.log('[scraperWorker] Scrape job completed.');
-//    }).catch((error) => {
-//        console.error('[scraperWorker] Error during scrape job:', error);
-//    });
-//});
+// this runs every 59 seconds
+cron.schedule('*/59 * * * * *', async () => {
+    console.log('\n[scraperWorker] Starting scheduled scrape job...');
+    scrapeService.runCron().then(() => {
+        console.log('[scraperWorker] Scrape job completed.');
+    }).catch((error) => {
+        console.error('[scraperWorker] Error during scrape job:', error);
+    });
+});
 
 // testing DB writes
 /*
 let mockObj = {
-    company: "Google", 
+    company: "Google",
     title: "Software Engineer",
 }
 await dbService.write(mockObj);

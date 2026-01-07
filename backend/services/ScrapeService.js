@@ -1,4 +1,4 @@
-import { mockPostings } from '../lib/mockData.js';
+import { Logger } from '../utils/logger.js';
 
 export class ScrapeService {
   constructor(
@@ -16,13 +16,13 @@ export class ScrapeService {
 
   async runCron() {
     if (this.isProcessing) {
-      console.log("Previous cron job still running, skipping...");
+      Logger.info("Previous cron job still running, skipping...");
       return;
     }
 
     this.isProcessing = true;
     const startTime = new Date();
-    console.log(`[ScrapeService] Starting cron job at ${startTime.toISOString()}`);
+    Logger.info(`[ScrapeService] Starting cron job at ${startTime.toISOString()}`);
 
     try {
       // 1. Fetch emails
@@ -35,11 +35,11 @@ export class ScrapeService {
 
       // 3. Scrape and write to DB
       const { successCount, errorCount } = await this.processJobs(jobs);
-      
+
       return this.buildResult(successCount, errorCount, startTime);
 
     } catch (error) {
-      console.error("[ScrapeService] Fatal error in cron job:", error);
+      Logger.error("[ScrapeService] Fatal error in cron job:", error);
       return { success: false, error: error.message };
     } finally {
       this.isProcessing = false;
@@ -49,23 +49,23 @@ export class ScrapeService {
   async fetchEmails() {
     const recipient = "no-reply@notify.careers";
     const rawEmails = await this.gmailService.fetchUnreadEmails(recipient);
-    
+
     if (!rawEmails?.length) {
-      console.log("[ScrapeService] No new emails found.");
+      Logger.info("[ScrapeService] No new emails found.");
       return null;
     }
 
-    console.log(`[ScrapeService] Found ${rawEmails.length} unread emails`);
+    Logger.info(`[ScrapeService] Found ${rawEmails.length} unread emails`);
     return rawEmails;
   }
 
   buildResult(successCount, errorCount, startTime) {
     const endTime = new Date();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
-    
-    console.log(`[ScrapeService] Cron job complete in ${duration}s`);
-    console.log(`[ScrapeService] Success: ${successCount} | Errors: ${errorCount}`);
-    
+
+    Logger.info(`[ScrapeService] Cron job complete in ${duration}s`);
+    Logger.info(`[ScrapeService] Success: ${successCount} | Errors: ${errorCount}`);
+
     return {
       success: true,
       processed: successCount,
@@ -77,7 +77,7 @@ export class ScrapeService {
   parseEmails(rawEmails) {
     // Extract all jobs from emails
     const allJobs = [];
-    
+
     for (const email of rawEmails) {
       const jobs = email.jobs || [];
       for (const job of jobs) {
@@ -89,13 +89,13 @@ export class ScrapeService {
         });
       }
     }
-    
+
     if (!allJobs.length) {
-      console.log("[ScrapeService] No job postings found in emails.");
+      Logger.info("[ScrapeService] No job postings found in emails.");
       return null;
     }
 
-    console.log(`[ScrapeService] Found ${allJobs.length} job postings to scrape`);
+    Logger.info(`[ScrapeService] Found ${allJobs.length} job postings to scrape`);
     return allJobs;
   }
 
@@ -105,7 +105,7 @@ export class ScrapeService {
 
     for (let i = 0; i < jobs.length; i++) {
       const result = await this.processJobPosting(jobs[i], i, jobs.length);
-      
+
       if (result.success) {
         successCount++;
       } else {
@@ -120,29 +120,35 @@ export class ScrapeService {
 
   async processJobPosting(job, index, total) {
     try {
-      console.log(`[ScrapeService] [${index + 1}/${total}] ${job.companyName} - ${job.jobTitle}`);
-      console.log(`[ScrapeService] Scraping: ${job.applyLink}`);
-      
+      Logger.info(`[ScrapeService] [${index + 1}/${total}] ${job.companyName} - ${job.jobTitle}`);
+      Logger.info(`[ScrapeService] Scraping: ${job.applyLink}`);
+
       // Scrape the job URL
       const scrapedData = await this.scraper.scrape(job.applyLink);
-      
+
+      Logger.info(`[ScrapeService] Scraped data: ${JSON.stringify(scrapedData)}`);
+
       // Combine email data + scraped data
       const enrichedJob = {
         ...job,
         scrapedData,
         status: 'pending',
         createdAt: new Date(),
-        postedAt: null
+        postedAt: null,
+        title: job.jobTitle,
+        company: job.companyName
       };
-      
+
+      Logger.info(`[ScrapeService] Enriched job: ${JSON.stringify(enrichedJob)}`);
+
       // Write to database
       const docId = await this.dbService.write(enrichedJob);
-      
-      console.log(`[ScrapeService] ✓ Saved to Firestore with ID: ${docId}`);
+
+      Logger.success(`[ScrapeService] ✓ Saved to Firestore with ID: ${docId}`);
       return { success: true, docId };
-      
+
     } catch (error) {
-      console.error(`[ScrapeService] ✗ Error processing job ${index + 1}:`, error.message);
+      Logger.error(`[ScrapeService] ✗ Error processing job ${index + 1}:`, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -160,12 +166,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const { GmailService } = await import('./GmailService.js');
   const { DatabaseService } = await import('./DatabaseService.js');
   const { JobScraper } = await import('./JobScraper.js');
-  
+
   const gmailService = new GmailService();
   const dbService = new DatabaseService();
   const scraper = new JobScraper();
-  
+
   const scrapeService = new ScrapeService(gmailService, dbService, scraper, 2000);
-  
+
   scrapeService.runCron().catch(console.error);
 }

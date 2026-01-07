@@ -4,6 +4,7 @@ import { createJobEmbed } from '../../discordBot/utils/createEmbed.js';
 
 // gmail object created from OAuth process; can work with it now to read/send gmails
 import { gmail } from '../config/gmailConfig.js';
+import { Logger } from '../utils/logger.js';
 
 dotenv.config();
 
@@ -29,7 +30,7 @@ export class GmailService {
         id: msg.id,
       });
       const payload = detail.data.payload;
-      const headers = payload.headers.reduce((acc,h) => {
+      const headers = payload.headers.reduce((acc, h) => {
         acc[h.name] = h.value;
         return acc;
       }, {});
@@ -88,7 +89,10 @@ export class GmailService {
       });
     }
 
-    console.log(JSON.stringify(emails, null, 2));
+    // logging the jobs that are found
+    for (const email of emails) {
+      Logger.logEmail(email);
+    }
     return emails;
   }
 

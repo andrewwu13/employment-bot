@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import * as cheerio from 'cheerio';
+import { Logger } from '../utils/logger.js';
 
 export class JobScraper {
   constructor(options = {}) {
@@ -10,37 +11,37 @@ export class JobScraper {
 
   async scrape(url) {
     const browser = await chromium.launch({ headless: this.headless });
-    
+
     // Setting up a user agent to avoid detection 
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     });
-    
+
     const page = await context.newPage();
-    
+
     try {
-      console.log(`Navigating to ${url}...`);
-      
+      Logger.info(`Navigating to ${url}...`);
+
       // Navigate to page
-      await page.goto(url, { 
+      await page.goto(url, {
         waitUntil: this.waitForNetworkIdle ? 'networkidle' : 'domcontentloaded',
-        timeout: this.timeout 
+        timeout: this.timeout
       });
-      
+
       // Optional: Wait a bit for dynamic content to load
       await page.waitForTimeout(2000);
-      
+
       // Optional: Auto-scroll to trigger lazy-loading
       await this.autoscroll(page);
-      
+
       // Download page content
       const html = await page.content();
-      
+
       // Extract data
       const jobContent = await this.extractData(html, url);
-      
+
       return jobContent;
-      
+
     } catch (error) {
       console.error('Error during scraping:', error.message);
       throw error;
@@ -72,14 +73,14 @@ export class JobScraper {
   // Extracts text data from a job posting page and formats to match Job.js model
   async extractData(pageHTML, url) {
     const $ = cheerio.load(pageHTML);
-    
+
     // Extract the main job title (usually in h1 or h2)
     const title = this.cleanText(
-      $('h1, h2').first().text() || 
+      $('h1, h2').first().text() ||
       $('[class*="title"], [class*="job-title"]').first().text() ||
       ''
     );
-    
+
     // Extract company name
     const company = this.cleanText(
       $('[class*="company"]').first().text() ||
@@ -87,10 +88,10 @@ export class JobScraper {
       this.extractCompanyFromUrl(url) ||
       ''
     );
-    
+
     // Extract all text content from the main body
     const bodyText = $('body').text();
-    
+
     // Extract location (multiple patterns)
     const location = this.cleanText(
       this.extractField(bodyText, /Location:\s*(.+?)(?:\n|Req|,)/i) ||
@@ -98,19 +99,19 @@ export class JobScraper {
       $('[class*="location"]').first().text() ||
       ''
     );
-    
+
     // Extract description with better formatting
     const description = this.buildDescription($, bodyText);
-    
+
     // Extract qualifications
     const qualifications = this.extractQualifications($, bodyText);
-    
+
     // Extract skills from various sections
     const skills = this.extractSkills($, bodyText);
-    
+
     // Try to extract or estimate posted date
     const postedDate = this.extractPostedDate($, bodyText);
-    
+
     // Return data matching Job.js model
     const jobData = {
       url: url,
@@ -122,7 +123,7 @@ export class JobScraper {
       skills: skills,
       postedDate: postedDate
     };
-    
+
     return jobData;
   }
 
@@ -161,7 +162,7 @@ export class JobScraper {
       'article',
       'main'
     ];
-    
+
     let description = '';
     for (const selector of descriptionSelectors) {
       const elem = $(selector);
@@ -170,28 +171,28 @@ export class JobScraper {
         break;
       }
     }
-    
+
     // If no specific description found, extract from sections
     if (!description) {
       const overview = this.extractSection($, bodyText, 'OVERVIEW|ABOUT|DESCRIPTION');
       const responsibilities = this.extractSection($, bodyText, 'RESPONSIBILITIES|DUTIES|ACCOUNTABILITIES');
       description = [overview, responsibilities].filter(Boolean).join(' ');
     }
-    
+
     return this.cleanText(description).substring(0, 2000);
   }
 
   // Extract qualifications with better formatting
   extractQualifications($, bodyText) {
     const qualText = this.extractSection($, bodyText, 'QUALIFICATIONS|REQUIREMENTS|REQUIRED|MUST HAVE');
-    
+
     if (!qualText) {
       // Try to find bullet points or lists
       const qualLists = $('ul, ol').filter((i, el) => {
         const text = $(el).text().toLowerCase();
         return text.includes('qualif') || text.includes('require') || text.includes('experience');
       });
-      
+
       if (qualLists.length) {
         const items = [];
         qualLists.first().find('li').each((i, el) => {
@@ -200,21 +201,21 @@ export class JobScraper {
         return items.join(' • ');
       }
     }
-    
+
     return this.cleanText(qualText || '').substring(0, 1500);
   }
 
   // Extract skills from the page
   extractSkills($, bodyText) {
     const skills = [];
-    
+
     // Common skill keywords to look for
     const skillPatterns = [
       /\b(JavaScript|TypeScript|Python|Java|C\+\+|React|Node\.js|SQL|AWS|Docker|Kubernetes)\b/gi,
       /\b(HTML|CSS|Git|Linux|MongoDB|PostgreSQL|Redis|GraphQL|REST|API)\b/gi,
       /\b(Agile|Scrum|CI\/CD|DevOps|Machine Learning|AI|Cloud|Microservices)\b/gi
     ];
-    
+
     // Extract from skills section
     const skillsSection = this.extractSection($, bodyText, 'SKILLS|TECHNOLOGIES|TECHNICAL');
     if (skillsSection) {
@@ -229,7 +230,7 @@ export class JobScraper {
         }
       });
     }
-    
+
     // Also check requirements section
     const reqSection = this.extractSection($, bodyText, 'REQUIREMENTS|QUALIFICATIONS');
     if (reqSection) {
@@ -244,7 +245,7 @@ export class JobScraper {
         }
       });
     }
-    
+
     return skills.slice(0, 10); // Limit to 10 skills
   }
 
@@ -256,7 +257,7 @@ export class JobScraper {
       'meta[name="date"]',
       'meta[property="og:updated_time"]'
     ];
-    
+
     for (const selector of dateMetaSelectors) {
       const dateStr = $(selector).attr('content');
       if (dateStr) {
@@ -266,18 +267,18 @@ export class JobScraper {
         }
       }
     }
-    
+
     // Try to extract from text
     const dateMatch = bodyText.match(/Posted:?\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i) ||
-                     bodyText.match(/Date:?\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i);
-    
+      bodyText.match(/Date:?\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i);
+
     if (dateMatch) {
       const date = new Date(dateMatch[1]);
       if (!isNaN(date.getTime())) {
         return date;
       }
     }
-    
+
     // Default to now if not found
     return new Date();
   }
@@ -292,11 +293,11 @@ export class JobScraper {
   extractSection($, text, headingPattern) {
     const regex = new RegExp(`(${headingPattern})([\\s\\S]*?)(?=\\n[A-Z][A-Z\\s]+:|$)`, 'i');
     const match = text.match(regex);
-    
+
     if (match) {
       return match[2].trim().replace(/\s+/g, ' ').substring(0, 1500);
     }
-    
+
     return null;
   }
 }
