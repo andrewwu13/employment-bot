@@ -3,7 +3,7 @@ A Discord bot to automate job postings and streamline the application process.
 
 Built using Node.js, Playwright, and JavaScript.
 
-## Running the App Locally
+## Running the App
 
 ### Prerequisites
 - Node.js installed (20.0 or higher)
@@ -13,12 +13,7 @@ Built using Node.js, Playwright, and JavaScript.
   - Gmail OAuth: `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`
   - Firebase: `FIREBASE_*` credentials
 
-### 1. Install Dependencies
-```bash
-npm install
-```
-
-### 2. Get Gmail Refresh Token
+### 1. Get Gmail Refresh Token
 Run the OAuth server:
 ```bash
 node backend/config/oauthConfig.js
@@ -27,7 +22,29 @@ Then visit http://localhost:3000/auth and sign into the Google account that rece
 
 > **Note:** The refresh token is tied to a specific Google account. Make sure to authorize with the account that has the job emails.
 
+### 2. Run with Docker Compose (Recommended)
+
+**Build and start all services:**
+```bash
+docker compose up --build
+```
+
+**Run in background:**
+```bash
+docker compose up --build -d
+```
+
+**Stop services:**
+```bash
+docker compose down
+```
+
 ### 3. Run Locally (without Docker)
+
+First install dependencies:
+```bash
+npm install
+```
 
 **Scraper (dev mode with hot reload):**
 ```bash
@@ -43,23 +60,6 @@ npm run discord:dev
 ```bash
 npm run scraper
 npm run discord
-```
-
-### 4. Run with Docker Compose
-
-**Build and start all services:**
-```bash
-docker compose up --build
-```
-
-**Run in background:**
-```bash
-docker compose up --build -d
-```
-
-**Stop services:**
-```bash
-docker compose down
 ```
 
 ## Available Scripts
