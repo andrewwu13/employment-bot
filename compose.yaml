@@ -1,0 +1,22 @@
+services:
+  # The Scraper (running as a persistent process locally)
+  scraper:
+    build:
+      context: .
+      target: base
+    command: npm run scraper
+    env_file: .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # Your Discord Bot
+  discord-bot:
+    build:
+      context: .
+      target: base
+    command: npm run discord
+    env_file: .env
+    volumes:
+      - .:/app
+      - /app/node_modules
