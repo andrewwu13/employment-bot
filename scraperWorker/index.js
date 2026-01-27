@@ -23,18 +23,4 @@ cron.schedule('*/59 * * * * *', async () => {
     });
 });
 
-// testing DB writes
-/*
-let mockObj = {
-    company: "Google",
-    title: "Software Engineer",
-}
-await dbService.write(mockObj);
-*/
 
-// testing scraper
-/*
-const testUrl = "https://jobs.ea.com/en_US/careers/JobDetail/Sims-Analyst-Intern/210862";
-const scrapedData = await scraper.scrape(testUrl);
-console.log(scrapedData);
-*/
