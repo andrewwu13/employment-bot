@@ -2,6 +2,91 @@ import { chromium } from 'playwright';
 import * as cheerio from 'cheerio';
 import { Logger } from '../utils/logger.js';
 
+/**
+ * Site-specific handlers for common job boards
+ * Each handler knows how to extract job data from its specific site structure
+ */
+const SITE_HANDLERS = {
+  // Workday job sites (e.g., company.wd3.myworkdayjobs.com)
+  workday: {
+    pattern: /workday|\.wd\d+\./i,
+    selectors: {
+      title: '[data-automation-id="jobPostingHeader"] h2, [data-automation-id="jobTitle"], .css-1q2dra3',
+      company: '[data-automation-id="company"], [data-automation-id="organizationName"]',
+      location: '[data-automation-id="locations"], [data-automation-id="location"]',
+      description: '[data-automation-id="jobPostingDescription"], [data-automation-id="jobDescription"]',
+      qualifications: '[data-automation-id="jobPostingQualifications"]'
+    },
+    waitFor: '[data-automation-id="jobPostingHeader"]'
+  },
+
+  // Lever job sites (jobs.lever.co)
+  lever: {
+    pattern: /lever\.co/i,
+    selectors: {
+      title: '.posting-headline h2, .posting-title',
+      company: '.main-header-logo img[alt], .company-name',
+      location: '.posting-categories .location, .workplaceTypes',
+      description: '.posting-page .section-wrapper.content-wrapper, [data-qa="job-description"]',
+      qualifications: '.posting-page .section-wrapper:has(h3:contains("Requirements"))'
+    },
+    waitFor: '.posting-headline'
+  },
+
+  // Greenhouse job sites (boards.greenhouse.io)
+  greenhouse: {
+    pattern: /greenhouse\.io/i,
+    selectors: {
+      title: '.app-title, #header .job-title, h1.job-title',
+      company: '.company-name, #header .company-name',
+      location: '.location, .job-info .location',
+      description: '#content .section-wrapper, #app_body .content',
+      qualifications: '#content .section-wrapper:has(h3:contains("Requirements"))'
+    },
+    waitFor: '.app-title, #header'
+  },
+
+  // Generic fallback for unknown sites
+  generic: {
+    pattern: /.*/,
+    selectors: {
+      title: 'h1:not([class*="cookie"]):not([class*="consent"]):not([class*="banner"]), [class*="job-title"], [class*="jobTitle"]',
+      company: '[class*="company"], [class*="employer"]',
+      location: '[class*="location"]',
+      description: '[class*="description"], [class*="job-description"], main, article',
+      qualifications: '[class*="requirements"], [class*="qualifications"]'
+    },
+    waitFor: null
+  }
+};
+
+/**
+ * Common cookie consent button selectors
+ */
+const COOKIE_DISMISS_SELECTORS = [
+  // OneTrust (very common)
+  '#onetrust-accept-btn-handler',
+  '#onetrust-reject-all-handler',
+  '.onetrust-close-btn-handler',
+  // Generic patterns
+  'button[id*="cookie"][id*="accept"]',
+  'button[id*="cookie"][id*="reject"]',
+  'button[class*="cookie"][class*="accept"]',
+  'button[class*="consent"][class*="accept"]',
+  '[class*="cookie-banner"] button[class*="accept"]',
+  '[class*="cookie-banner"] button[class*="close"]',
+  '[class*="cookie"] button:has-text("Accept")',
+  '[class*="cookie"] button:has-text("OK")',
+  '[class*="cookie"] button:has-text("Got it")',
+  '[class*="consent"] button:has-text("Accept")',
+  // GDPR specific
+  '#gdpr-banner-accept',
+  '.gdpr-accept',
+  // Specific sites
+  '.cc-btn.cc-dismiss', // Cookie Consent lib
+  '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll', // Cookiebot
+];
+
 export class JobScraper {
   constructor(options = {}) {
     this.timeout = options.timeout ?? 30000;
@@ -9,10 +94,43 @@ export class JobScraper {
     this.headless = options.headless ?? true;
   }
 
+  /**
+   * Detect which site handler to use based on URL
+   */
+  detectSiteHandler(url) {
+    for (const [name, handler] of Object.entries(SITE_HANDLERS)) {
+      if (name !== 'generic' && handler.pattern.test(url)) {
+        Logger.info(`[JobScraper] Detected site type: ${name}`);
+        return { name, ...handler };
+      }
+    }
+    Logger.info(`[JobScraper] Using generic handler for: ${url}`);
+    return { name: 'generic', ...SITE_HANDLERS.generic };
+  }
+
+  /**
+   * Try to dismiss cookie consent banners
+   */
+  async dismissCookieBanners(page) {
+    for (const selector of COOKIE_DISMISS_SELECTORS) {
+      try {
+        const button = await page.$(selector);
+        if (button) {
+          await button.click();
+          Logger.info(`[JobScraper] Dismissed cookie banner using: ${selector}`);
+          await page.waitForTimeout(500); // Wait for banner to disappear
+          return true;
+        }
+      } catch (e) {
+        // Selector not found or click failed, try next
+      }
+    }
+    return false;
+  }
+
   async scrape(url) {
     const browser = await chromium.launch({ headless: this.headless });
 
-    // Setting up a user agent to avoid detection 
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     });
@@ -20,7 +138,7 @@ export class JobScraper {
     const page = await context.newPage();
 
     try {
-      Logger.info(`Navigating to ${url}...`);
+      Logger.info(`[JobScraper] Navigating to ${url}...`);
 
       // Navigate to page
       await page.goto(url, {
@@ -28,29 +146,52 @@ export class JobScraper {
         timeout: this.timeout
       });
 
-      // Optional: Wait a bit for dynamic content to load
+      // Log the final URL after redirects
+      const finalUrl = page.url();
+      if (finalUrl !== url) {
+        Logger.info(`[JobScraper] Redirected to: ${finalUrl}`);
+      }
+
+      // Detect site type from final URL
+      const handler = this.detectSiteHandler(finalUrl);
+
+      // Wait for site-specific content if defined
+      if (handler.waitFor) {
+        try {
+          await page.waitForSelector(handler.waitFor, { timeout: 5000 });
+        } catch (e) {
+          Logger.warn(`[JobScraper] Site-specific selector not found, continuing...`);
+        }
+      }
+
+      // Wait a bit for dynamic content
       await page.waitForTimeout(2000);
 
-      // Optional: Auto-scroll to trigger lazy-loading
+      // Dismiss cookie banners BEFORE extracting content
+      await this.dismissCookieBanners(page);
+
+      // Auto-scroll to trigger lazy-loading
       await this.autoscroll(page);
 
-      // Download page content
+      // Get page content
       const html = await page.content();
 
-      // Extract data
-      const jobContent = await this.extractData(html, url);
+      // Extract data using site-specific handler
+      const jobContent = await this.extractData(html, finalUrl, handler);
+
+      // Validate extraction quality
+      this.validateExtraction(jobContent);
 
       return jobContent;
 
     } catch (error) {
-      console.error('Error during scraping:', error.message);
+      console.error('[JobScraper] Error during scraping:', error.message);
       throw error;
     } finally {
       await browser.close();
     }
   }
 
-  // Auto-scrolls the page to trigger lazy-loading
   async autoscroll(page) {
     await page.evaluate(async () => {
       await new Promise((resolve) => {
@@ -70,188 +211,241 @@ export class JobScraper {
     });
   }
 
-  // Extracts text data from a job posting page and formats to match Job.js model
-  async extractData(pageHTML, url) {
+  /**
+   * Extract data using site-specific selectors
+   */
+  async extractData(pageHTML, url, handler) {
     const $ = cheerio.load(pageHTML);
+    const selectors = handler.selectors;
 
-    // Extract the main job title (usually in h1 or h2)
-    const title = this.cleanText(
-      $('h1, h2').first().text() ||
-      $('[class*="title"], [class*="job-title"]').first().text() ||
-      ''
-    );
+    // Extract title using site-specific selectors
+    const title = this.extractWithFallback($, selectors.title) ||
+      this.extractFromTitle($) ||
+      '';
 
-    // Extract company name
-    const company = this.cleanText(
-      $('[class*="company"]').first().text() ||
-      $('meta[property="og:site_name"]').attr('content') ||
+    // Extract company
+    const company = this.extractWithFallback($, selectors.company) ||
       this.extractCompanyFromUrl(url) ||
-      ''
-    );
+      '';
 
-    // Extract all text content from the main body
-    const bodyText = $('body').text();
+    // Extract location
+    const location = this.extractWithFallback($, selectors.location) || '';
 
-    // Extract location (multiple patterns)
-    const location = this.cleanText(
-      this.extractField(bodyText, /Location:\s*(.+?)(?:\n|Req|,)/i) ||
-      this.extractField(bodyText, /\b(Remote|Hybrid|On-?site)\b/i) ||
-      $('[class*="location"]').first().text() ||
-      ''
-    );
-
-    // Extract description with better formatting
-    const description = this.buildDescription($, bodyText);
+    // Extract description
+    const description = this.extractDescription($, selectors.description);
 
     // Extract qualifications
-    const qualifications = this.extractQualifications($, bodyText);
+    const qualifications = this.extractWithFallback($, selectors.qualifications) || '';
 
     // Extract skills from various sections
+    const bodyText = $('body').text();
     const skills = this.extractSkills($, bodyText);
 
-    // Try to extract or estimate posted date
+    // Try to extract posted date
     const postedDate = this.extractPostedDate($, bodyText);
 
-    // Return data matching Job.js model
-    const jobData = {
+    return {
       url: url,
-      title: title,
-      company: company,
-      location: location,
-      description: description,
-      qualifications: qualifications,
+      title: this.cleanText(title),
+      company: this.cleanText(company),
+      location: this.cleanText(location),
+      description: this.cleanText(description).substring(0, 2000),
+      qualifications: this.cleanText(qualifications).substring(0, 1500),
       skills: skills,
-      postedDate: postedDate
+      postedDate: postedDate,
+      _extractedBy: handler.name // For debugging
     };
-
-    return jobData;
   }
 
-  // Clean and normalize text
+  /**
+   * Try multiple selectors and return first match
+   */
+  extractWithFallback($, selectorString) {
+    if (!selectorString) return null;
+
+    const selectors = selectorString.split(', ');
+    for (const selector of selectors) {
+      try {
+        const elem = $(selector.trim()).first();
+        if (elem.length) {
+          const text = elem.text().trim();
+          // Skip if it looks like cookie/consent content
+          if (text && !this.looksLikeCookieContent(text)) {
+            return text;
+          }
+        }
+      } catch (e) {
+        // Invalid selector, try next
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Extract title from page <title> tag as fallback
+   */
+  extractFromTitle($) {
+    const pageTitle = $('title').text();
+    if (!pageTitle) return null;
+
+    // Common patterns: "Job Title | Company" or "Job Title - Company"
+    const parts = pageTitle.split(/\s*[\|–-]\s*/);
+    if (parts.length > 0) {
+      const title = parts[0].trim();
+      // Skip if it looks like a generic page title
+      if (!title.match(/^(home|jobs|careers|apply)/i)) {
+        return title;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Extract and clean description, avoiding cookie content
+   */
+  extractDescription($, selectorString) {
+    const selectors = selectorString ? selectorString.split(', ') : [];
+
+    for (const selector of selectors) {
+      try {
+        const elem = $(selector.trim()).first();
+        if (elem.length) {
+          // Remove any cookie/consent related elements within
+          elem.find('[class*="cookie"], [class*="consent"], [class*="banner"]').remove();
+          const text = elem.text().trim();
+          if (text && !this.looksLikeCookieContent(text) && text.length > 100) {
+            return text;
+          }
+        }
+      } catch (e) {
+        // Invalid selector, try next
+      }
+    }
+
+    // Fallback: try to find main content area
+    const mainContent = $('main, article, [role="main"]').first();
+    if (mainContent.length) {
+      mainContent.find('[class*="cookie"], [class*="consent"]').remove();
+      return mainContent.text().trim();
+    }
+
+    return '';
+  }
+
+  /**
+   * Detect if text looks like cookie consent content
+   */
+  looksLikeCookieContent(text) {
+    if (!text) return false;
+    const lowerText = text.toLowerCase();
+    const cookiePatterns = [
+      'we use cookies',
+      'cookie policy',
+      'cookie consent',
+      'cookie preferences',
+      'accept all cookies',
+      'reject all cookies',
+      'personalize content and ads',
+      'privacy preferences',
+      'consent to cookies',
+      'this site uses cookies',
+      'by continuing to browse',
+      'gdpr',
+      'privacy settings'
+    ];
+    return cookiePatterns.some(pattern => lowerText.includes(pattern));
+  }
+
+  /**
+   * Validate extraction quality and log warnings
+   */
+  validateExtraction(data) {
+    const warnings = [];
+
+    if (!data.title || data.title.length < 5) {
+      warnings.push('Title extraction may have failed');
+    }
+
+    if (this.looksLikeCookieContent(data.title)) {
+      warnings.push('Title looks like cookie content!');
+    }
+
+    if (this.looksLikeCookieContent(data.description)) {
+      warnings.push('Description looks like cookie content!');
+    }
+
+    if (!data.location) {
+      warnings.push('Location not found');
+    }
+
+    if (warnings.length > 0) {
+      Logger.warn(`[JobScraper] Quality warnings: ${warnings.join(', ')}`);
+    }
+  }
+
   cleanText(text) {
     if (!text) return '';
     return text
-      .replace(/\s+/g, ' ')      // Replace multiple spaces with single space
-      .replace(/\n+/g, ' ')      // Replace newlines with space
-      .replace(/\t+/g, ' ')      // Replace tabs with space
-      .trim()                     // Remove leading/trailing whitespace
-      .substring(0, 500);        // Limit length
+      .replace(/\s+/g, ' ')
+      .replace(/\n+/g, ' ')
+      .replace(/\t+/g, ' ')
+      .trim()
+      .substring(0, 500);
   }
 
-  // Extract company name from URL
   extractCompanyFromUrl(url) {
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.replace('www.', '');
       const parts = hostname.split('.');
-      // Get main domain name (e.g., "google" from "careers.google.com")
+
+      // Skip common job board domains
+      const skipDomains = ['workdayjobs', 'myworkdayjobs', 'lever', 'greenhouse', 'jobvite', 'smartrecruiters'];
+      for (const skip of skipDomains) {
+        if (hostname.includes(skip)) {
+          // Try to get company from subdomain or path
+          if (parts[0] && !skipDomains.includes(parts[0])) {
+            return parts[0];
+          }
+          const pathParts = urlObj.pathname.split('/').filter(Boolean);
+          if (pathParts.length > 0) {
+            return pathParts[0];
+          }
+        }
+      }
+
       return parts.length > 1 ? parts[parts.length - 2] : parts[0];
     } catch {
       return '';
     }
   }
 
-  // Build comprehensive description
-  buildDescription($, bodyText) {
-    // Try multiple selectors for description
-    const descriptionSelectors = [
-      '[class*="description"]',
-      '[class*="job-description"]',
-      '[class*="content"]',
-      '[class*="summary"]',
-      'article',
-      'main'
-    ];
-
-    let description = '';
-    for (const selector of descriptionSelectors) {
-      const elem = $(selector);
-      if (elem.length) {
-        description = elem.text();
-        break;
-      }
-    }
-
-    // If no specific description found, extract from sections
-    if (!description) {
-      const overview = this.extractSection($, bodyText, 'OVERVIEW|ABOUT|DESCRIPTION');
-      const responsibilities = this.extractSection($, bodyText, 'RESPONSIBILITIES|DUTIES|ACCOUNTABILITIES');
-      description = [overview, responsibilities].filter(Boolean).join(' ');
-    }
-
-    return this.cleanText(description).substring(0, 2000);
-  }
-
-  // Extract qualifications with better formatting
-  extractQualifications($, bodyText) {
-    const qualText = this.extractSection($, bodyText, 'QUALIFICATIONS|REQUIREMENTS|REQUIRED|MUST HAVE');
-
-    if (!qualText) {
-      // Try to find bullet points or lists
-      const qualLists = $('ul, ol').filter((i, el) => {
-        const text = $(el).text().toLowerCase();
-        return text.includes('qualif') || text.includes('require') || text.includes('experience');
-      });
-
-      if (qualLists.length) {
-        const items = [];
-        qualLists.first().find('li').each((i, el) => {
-          items.push(this.cleanText($(el).text()));
-        });
-        return items.join(' • ');
-      }
-    }
-
-    return this.cleanText(qualText || '').substring(0, 1500);
-  }
-
-  // Extract skills from the page
   extractSkills($, bodyText) {
     const skills = [];
 
-    // Common skill keywords to look for
     const skillPatterns = [
       /\b(JavaScript|TypeScript|Python|Java|C\+\+|React|Node\.js|SQL|AWS|Docker|Kubernetes)\b/gi,
       /\b(HTML|CSS|Git|Linux|MongoDB|PostgreSQL|Redis|GraphQL|REST|API)\b/gi,
       /\b(Agile|Scrum|CI\/CD|DevOps|Machine Learning|AI|Cloud|Microservices)\b/gi
     ];
 
-    // Extract from skills section
-    const skillsSection = this.extractSection($, bodyText, 'SKILLS|TECHNOLOGIES|TECHNICAL');
-    if (skillsSection) {
-      skillPatterns.forEach(pattern => {
-        const matches = skillsSection.match(pattern);
-        if (matches) {
-          matches.forEach(skill => {
-            if (!skills.includes(skill)) {
-              skills.push(skill);
-            }
-          });
-        }
-      });
-    }
+    const searchText = bodyText.substring(0, 10000); // Limit search area
 
-    // Also check requirements section
-    const reqSection = this.extractSection($, bodyText, 'REQUIREMENTS|QUALIFICATIONS');
-    if (reqSection) {
-      skillPatterns.forEach(pattern => {
-        const matches = reqSection.match(pattern);
-        if (matches) {
-          matches.forEach(skill => {
-            if (!skills.includes(skill) && skills.length < 10) {
-              skills.push(skill);
-            }
-          });
-        }
-      });
-    }
+    skillPatterns.forEach(pattern => {
+      const matches = searchText.match(pattern);
+      if (matches) {
+        matches.forEach(skill => {
+          if (!skills.includes(skill) && skills.length < 10) {
+            skills.push(skill);
+          }
+        });
+      }
+    });
 
-    return skills.slice(0, 10); // Limit to 10 skills
+    return skills;
   }
 
-  // Extract or estimate posted date
   extractPostedDate($, bodyText) {
-    // Try to find date in meta tags
     const dateMetaSelectors = [
       'meta[property="article:published_time"]',
       'meta[name="date"]',
@@ -268,7 +462,6 @@ export class JobScraper {
       }
     }
 
-    // Try to extract from text
     const dateMatch = bodyText.match(/Posted:?\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i) ||
       bodyText.match(/Date:?\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i);
 
@@ -279,30 +472,6 @@ export class JobScraper {
       }
     }
 
-    // Default to now if not found
     return new Date();
   }
-
-  // Helper to extract a field using regex
-  extractField(text, regex) {
-    const match = text.match(regex);
-    return match ? match[1].trim() : null;
-  }
-
-  // Helper to extract sections by heading (supports multiple patterns)
-  extractSection($, text, headingPattern) {
-    const regex = new RegExp(`(${headingPattern})([\\s\\S]*?)(?=\\n[A-Z][A-Z\\s]+:|$)`, 'i');
-    const match = text.match(regex);
-
-    if (match) {
-      return match[2].trim().replace(/\s+/g, ' ').substring(0, 1500);
-    }
-
-    return null;
-  }
 }
-
-// Example usage:
-// const scraper = new JobScraper({ headless: true });
-// const jobDetails = await scraper.scrape('https://opg.com/careers/job-posting-url');
-// console.log(jobDetails);

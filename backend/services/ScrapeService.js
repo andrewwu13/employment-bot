@@ -164,10 +164,16 @@ export class ScrapeService {
 // Run for node testing in isolation
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { GmailService } = await import('./GmailService.js');
+  const { MockGmailService } = await import('./MockGmailService.js');
   const { DatabaseService } = await import('./DatabaseService.js');
   const { JobScraper } = await import('./JobScraper.js');
 
-  const gmailService = new GmailService();
+  const isDevMode = process.env.DEV_MODE === 'true';
+  if (isDevMode) {
+    Logger.info('[ScrapeService] Running in DEV MODE - using mock Gmail service');
+  }
+
+  const gmailService = isDevMode ? new MockGmailService() : new GmailService();
   const dbService = new DatabaseService();
   const scraper = new JobScraper();
 
@@ -175,3 +181,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   scrapeService.runCron().catch(console.error);
 }
+

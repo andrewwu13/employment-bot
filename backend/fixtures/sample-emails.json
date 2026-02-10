@@ -1,0 +1,43 @@
+[
+    {
+        "id": "mock-email-001",
+        "from": "Notify <no-reply@notify.careers>",
+        "subject": "Found 3 new job postings!",
+        "date": "2026-02-08T10:00:00Z",
+        "jobs": [
+            {
+                "companyName": "Example Corp",
+                "jobTitle": "Software Engineer Intern",
+                "applyLink": "https://example.com/jobs/swe-intern"
+            },
+            {
+                "companyName": "Test Company",
+                "jobTitle": "Frontend Developer",
+                "applyLink": "https://example.com/jobs/frontend"
+            },
+            {
+                "companyName": "Demo Inc",
+                "jobTitle": "Backend Engineer",
+                "applyLink": "https://example.com/jobs/backend"
+            }
+        ]
+    },
+    {
+        "id": "mock-email-002",
+        "from": "Notify <no-reply@notify.careers>",
+        "subject": "2 new matches for your profile",
+        "date": "2026-02-07T14:30:00Z",
+        "jobs": [
+            {
+                "companyName": "Tech Startup",
+                "jobTitle": "Full Stack Developer",
+                "applyLink": "https://example.com/jobs/fullstack"
+            },
+            {
+                "companyName": "Big Corp",
+                "jobTitle": "Data Science Intern",
+                "applyLink": "https://example.com/jobs/data-science"
+            }
+        ]
+    }
+]
