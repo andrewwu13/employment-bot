@@ -44,7 +44,11 @@ app.get("/oauth2callback", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`OAuth server running on ${PORT}`))
+try {
+  app.listen(PORT, () => console.log(`OAuth server running on ${PORT}`))
+} catch (error) {
+  console.error(error);
+}
 
 console.log("CLIENT ID:", process.env.GMAIL_CLIENT_ID);
 console.log("CLIENT SECRET:", process.env.GMAIL_CLIENT_SECRET);

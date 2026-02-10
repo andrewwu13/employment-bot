@@ -61,6 +61,9 @@ client.once(Events.ClientReady, (c) => {
   });
 });
 
+// set up channel (either testing or production)
+const discordChannelID = process.env.DEV_MODE == "false" ? process.env.JOB_CHANNEL_ID : process.env.JOB_CHANNEL_ID // to be replaced with the dev channel
+
 // Function to post pending jobs from database to Discord
 async function postPendingJobs() {
   try {
@@ -74,7 +77,8 @@ async function postPendingJobs() {
 
     Logger.info(`[DiscordBot] Found ${pendingJobs.length} pending jobs to post`);
 
-    const channel = await client.channels.fetch(process.env.JOB_CHANNEL_ID);
+    // Specifying which channel to post to. 
+    const channel = await client.channels.fetch(discordChannelID);
 
     // Post each job as an embed
     for (let i = 0; i < pendingJobs.length; i++) {
