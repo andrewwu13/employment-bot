@@ -1,10 +1,9 @@
-
-export function createJobEmbed(job) {
-  console.log(job);
-
+// Create Discord embed from database job object
+export function createJobEmbedFromDB(job) {
+  const applyUrl = job.url || job.applyLink || null;
   const fields = [];
 
-  // Add company and location
+  // Company & Location on a single row
   if (job.company) {
     fields.push({
       name: 'Company',
@@ -14,41 +13,48 @@ export function createJobEmbed(job) {
   }
 
   if (job.location) {
+    // Clean up location formatting (e.g. "Canada- Montreal- 2351 Alfred Nobel" → "Montreal, Canada")
+    const cleanLocation = job.location
+      .split(/[-–]/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .reverse()
+      .slice(0, 2)
+      .reverse()
+      .join(', ');
     fields.push({
       name: 'Location',
-      value: job.location,
+      value: cleanLocation,
       inline: true
     });
   }
 
-  // Add skills if available
+  // Skills displayed as inline code tags for a cleaner look
   if (job.skills && job.skills.length > 0) {
+    const skillTags = job.skills.slice(0, 8).map(s => `\`${s}\``).join('  ');
     fields.push({
       name: 'Skills',
-      value: job.skills.join(', '),
+      value: skillTags,
       inline: false
     });
   }
 
-  // Handle differences between raw DB job and enriched job
-  const title = job.title || 'Job Posting';
-  const url = job.url || job.applyLink;
-  const timestamp = job.createdAt && typeof job.createdAt.toDate === 'function'
-    ? job.createdAt.toDate().toISOString()
-    : new Date().toISOString();
-
-  const footerText = job.createdAt && typeof job.createdAt.toDate === 'function'
-    ? `Posted: ${job.createdAt.toDate().toLocaleDateString()}`
-    : `Posted: ${new Date().toLocaleDateString()}`;
+  // Format the posted date
+  let footerText = 'Employment Bot';
+  try {
+    const date = job.createdAt.toDate ? job.createdAt.toDate() : new Date(job.createdAt);
+    footerText += ` • ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  } catch {
+    // ignore date formatting errors
+  }
 
   return {
-    title: title,
-    url: url,
-    color: 0x0099ff,
+    title: `📋  ${job.title || 'Job Posting'}`,
+    url: applyUrl,
+    color: 0x5865F2, // Discord blurple
     fields: fields,
     footer: {
       text: footerText
-    },
-    timestamp: timestamp
+    }
   };
 }

@@ -11,10 +11,15 @@ export class DatabaseService {
 
   }
 
+  // Helper to get the correct Firestore collection based on DEV_MODE
+  _getCollection() {
+    return process.env.DEV_MODE === 'true' ? 'test_postings' : 'job_postings';
+  }
+
   // read from firestore DB
   async read(docId) {
     try {
-      const docRef = db.collection("job_postings").doc(docId);
+      const docRef = db.collection(this._getCollection()).doc(docId);
       const doc = await docRef.get();
 
       if (!doc.exists) {
@@ -32,8 +37,7 @@ export class DatabaseService {
   // Get all pending jobs
   async getPendingJobs(limit = 10) {
     try {
-      const dbCollection = process.env.DEV_MODE == "true" ? "test_postings" : "job_postings";
-      const snapshot = await db.collection(dbCollection)
+      const snapshot = await db.collection(this._getCollection())
         .where("status", "==", "pending")
         .limit(limit)
         .get();
@@ -54,7 +58,7 @@ export class DatabaseService {
   async markJobsAsPosting(jobIds) {
     const batch = db.batch();
     for (const id of jobIds) {
-      batch.update(db.collection("job_postings").doc(id), { status: "posting" });
+      batch.update(db.collection(this._getCollection()).doc(id), { status: "posting" });
     }
     await batch.commit();
   }
@@ -62,7 +66,7 @@ export class DatabaseService {
   // Revert a job back to pending if posting fails
   async markJobAsFailed(docId) {
     try {
-      await db.collection("job_postings").doc(docId).update({
+      await db.collection(this._getCollection()).doc(docId).update({
         status: "pending"
       });
     } catch (error) {
@@ -73,7 +77,7 @@ export class DatabaseService {
   // Mark job as posted
   async markJobAsPosted(docId) {
     try {
-      await db.collection("job_postings").doc(docId).update({
+      await db.collection(this._getCollection()).doc(docId).update({
         status: "posted",
         postedAt: new Date()
       });
@@ -93,8 +97,7 @@ export class DatabaseService {
       const job = jobData instanceof Job ? jobData : new Job(jobData);
 
       // add to DB using firebase-admin syntax
-      const dbCollectionWrite = process.env.DEV_MODE === 'true' ? "test_postings" : "job_postings";
-      const docRef = await db.collection(dbCollectionWrite).add(job.toFirestore());
+      const docRef = await db.collection(this._getCollection()).add(job.toFirestore());
 
       Logger.info("Document written with ID: ", docRef.id);
 

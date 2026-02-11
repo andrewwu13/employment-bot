@@ -4,6 +4,7 @@ import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { REST, Routes } from 'discord.js';
 import { DatabaseService } from '../backend/services/DatabaseService.js';
 import { Logger } from '../backend/utils/logger.js';
+import { createJobEmbedFromDB } from './utils/createEmbed.js';
 
 // Initialize backend services
 const dbService = new DatabaseService();
@@ -117,49 +118,7 @@ async function postPendingJobs() {
   }
 }
 
-// Create Discord embed from database job object
-function createJobEmbedFromDB(job) {
-  const fields = [];
 
-  // Add company and location
-  if (job.company) {
-    fields.push({
-      name: '🏢 Company',
-      value: job.company,
-      inline: true
-    });
-  }
-
-  if (job.location) {
-    fields.push({
-      name: '📍 Location',
-      value: job.location,
-      inline: true
-    });
-  }
-
-  // Add skills if available
-  if (job.skills && job.skills.length > 0) {
-    fields.push({
-      name: '💻 Skills',
-      value: job.skills.slice(0, 5).join(', '),
-      inline: false
-    });
-  }
-
-
-
-  return {
-    title: job.title || 'Job Posting',
-    url: job.url || job.applyLink,
-    color: 0x0099ff,
-    fields: fields,
-    footer: {
-      text: `Posted: ${job.createdAt.toDate().toLocaleDateString()}`
-    },
-    timestamp: job.createdAt.toDate().toISOString()
-  };
-}
 
 // Command handlers
 client.on(Events.InteractionCreate, async interaction => {
