@@ -1,87 +1,7 @@
 import { chromium } from 'playwright';
 import * as cheerio from 'cheerio';
 import { Logger } from '../utils/logger.js';
-
-/**
- * Site-specific handlers for common job boards
- * Each handler knows how to extract job data from its specific site structure
- */
-const SITE_HANDLERS = {
-  // Workday job sites (e.g., company.wd3.myworkdayjobs.com)
-  workday: {
-    pattern: /workday|\.wd\d+\./i,
-    selectors: {
-      title: '[data-automation-id="jobPostingHeader"] h2, [data-automation-id="jobTitle"], .css-1q2dra3',
-      company: '[data-automation-id="company"], [data-automation-id="organizationName"]',
-      location: '[data-automation-id="locations"], [data-automation-id="location"]',
-      qualifications: '[data-automation-id="jobPostingQualifications"]'
-    },
-    waitFor: '[data-automation-id="jobPostingHeader"]'
-  },
-
-  // Lever job sites (jobs.lever.co)
-  lever: {
-    pattern: /lever\.co/i,
-    selectors: {
-      title: '.posting-headline h2, .posting-title',
-      company: '.main-header-logo img[alt], .company-name',
-      location: '.posting-categories .location, .workplaceTypes',
-      qualifications: '.posting-page .section-wrapper:has(h3:contains("Requirements"))'
-    },
-    waitFor: '.posting-headline'
-  },
-
-  // Greenhouse job sites (boards.greenhouse.io)
-  greenhouse: {
-    pattern: /greenhouse\.io/i,
-    selectors: {
-      title: '.app-title, #header .job-title, h1.job-title',
-      company: '.company-name, #header .company-name',
-      location: '.location, .job-info .location',
-      qualifications: '#content .section-wrapper:has(h3:contains("Requirements"))'
-    },
-    waitFor: '.app-title, #header'
-  },
-
-  // Generic fallback for unknown sites
-  generic: {
-    pattern: /.*/,
-    selectors: {
-      title: 'h1:not([class*="cookie"]):not([class*="consent"]):not([class*="banner"]), [class*="job-title"], [class*="jobTitle"]',
-      company: '[class*="company"], [class*="employer"]',
-      location: '[class*="location"]',
-      qualifications: '[class*="requirements"], [class*="qualifications"]'
-    },
-    waitFor: null
-  }
-};
-
-/**
- * Common cookie consent button selectors
- */
-const COOKIE_DISMISS_SELECTORS = [
-  // OneTrust (very common)
-  '#onetrust-accept-btn-handler',
-  '#onetrust-reject-all-handler',
-  '.onetrust-close-btn-handler',
-  // Generic patterns
-  'button[id*="cookie"][id*="accept"]',
-  'button[id*="cookie"][id*="reject"]',
-  'button[class*="cookie"][class*="accept"]',
-  'button[class*="consent"][class*="accept"]',
-  '[class*="cookie-banner"] button[class*="accept"]',
-  '[class*="cookie-banner"] button[class*="close"]',
-  '[class*="cookie"] button:has-text("Accept")',
-  '[class*="cookie"] button:has-text("OK")',
-  '[class*="cookie"] button:has-text("Got it")',
-  '[class*="consent"] button:has-text("Accept")',
-  // GDPR specific
-  '#gdpr-banner-accept',
-  '.gdpr-accept',
-  // Specific sites
-  '.cc-btn.cc-dismiss', // Cookie Consent lib
-  '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll', // Cookiebot
-];
+import { SITE_HANDLERS, COOKIE_DISMISS_SELECTORS } from '../lib/siteHandlers.js';
 
 export class JobScraper {
   constructor(options = {}) {
@@ -90,9 +10,7 @@ export class JobScraper {
     this.headless = options.headless ?? true;
   }
 
-  /**
-   * Detect which site handler to use based on URL
-   */
+  // Detect which site handler to use based on URL
   detectSiteHandler(url) {
     for (const [name, handler] of Object.entries(SITE_HANDLERS)) {
       if (name !== 'generic' && handler.pattern.test(url)) {
@@ -104,9 +22,7 @@ export class JobScraper {
     return { name: 'generic', ...SITE_HANDLERS.generic };
   }
 
-  /**
-   * Try to dismiss cookie consent banners
-   */
+  // Try to dismiss cookie consent banners
   async dismissCookieBanners(page) {
     for (const selector of COOKIE_DISMISS_SELECTORS) {
       try {
@@ -207,9 +123,7 @@ export class JobScraper {
     });
   }
 
-  /**
-   * Extract data using site-specific selectors
-   */
+  // Extract data using site-specific selectors
   async extractData(pageHTML, url, handler) {
     const $ = cheerio.load(pageHTML);
     const selectors = handler.selectors;
@@ -220,9 +134,7 @@ export class JobScraper {
       '';
 
     // Extract company
-    const company = this.extractWithFallback($, selectors.company) ||
-      this.extractCompanyFromUrl(url) ||
-      '';
+    const company = this.extractWithFallback($, selectors.company) || this.extractCompanyFromUrl(url) || '';
 
     // Extract location
     const location = this.extractWithFallback($, selectors.location) || '';
@@ -249,9 +161,7 @@ export class JobScraper {
     };
   }
 
-  /**
-   * Try multiple selectors and return first match
-   */
+  // Try multiple selectors and return first match
   extractWithFallback($, selectorString) {
     if (!selectorString) return null;
 
@@ -273,9 +183,7 @@ export class JobScraper {
     return null;
   }
 
-  /**
-   * Extract title from page <title> tag as fallback
-   */
+  // Extract title from page <title> tag as fallback
   extractFromTitle($) {
     const pageTitle = $('title').text();
     if (!pageTitle) return null;
@@ -293,9 +201,7 @@ export class JobScraper {
   }
 
 
-  /**
-   * Detect if text looks like cookie consent content
-   */
+  // Detect if text looks like cookie consent content
   looksLikeCookieContent(text) {
     if (!text) return false;
     const lowerText = text.toLowerCase();
@@ -317,9 +223,7 @@ export class JobScraper {
     return cookiePatterns.some(pattern => lowerText.includes(pattern));
   }
 
-  /**
-   * Validate extraction quality and log warnings
-   */
+  // Validate extraction quality and log warnings
   validateExtraction(data) {
     const warnings = [];
 
