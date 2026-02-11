@@ -99,5 +99,8 @@ export const allSkills = [
   // Data/AI
   'Machine Learning', 'ML', 'AI', 'Deep Learning', 'TensorFlow', 'PyTorch',
   // OS
-  'Linux', 'Unix', 'Windows', 'macOS', 'Android', 'iOS'
+  'Linux', 'Unix', 'Windows', 'macOS', 'Android', 'iOS',
+  // MS Office & BA Tools
+  'Excel', 'Word', 'PowerPoint', 'Outlook', 'Access', 'VBA',
+  'Tableau', 'Power BI', 'SQL', 'Visio', 'SharePoint'
 ];
