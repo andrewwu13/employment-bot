@@ -1,8 +1,8 @@
 import { chromium } from 'playwright';
 import * as cheerio from 'cheerio';
-import { Logger } from '../utils/logger.js';
+import { allSkills } from './constants.js'; 
 
-const url = "https://boards.greenhouse.io/embed/job_app?token=5712997004&utm_source=jobright&jr_id=691f0925a49a885af9a2bda5";
+const url = "https://careers.trccompanies.com/jobs/25291?lang=en-us&iis=Job+Board&iisn=jobright&jr_id=698c0e590f6f7e7a2ce79f25";
 
 const browser = await chromium.launch({ headless: true });
 
@@ -11,18 +11,8 @@ const context = await browser.newContext({
 });
 
 const page = await context.newPage();
-
 await page.goto(url);
-
 const html = await page.content();
-const $ = cheerio.load(html);
-  
-// Try to extract JSON-LD structured data first (best source)
-const jsonLdScript = $('script[type="application/ld+json"]').html();
-const JSONData = JSON.parse(jsonLdScript);
-
-//Logger.info(JSONData);
-
 await browser.close();
 
 async function extractData(pageHTML, url) {
@@ -36,9 +26,27 @@ async function extractData(pageHTML, url) {
     company: JSONData.hiringOrganization.name,
     location: JSONData.jobLocation.address.addressLocality,
     qualifications: '',
-    skills: '',
+    skills: extractSkills(JSONData.description),
     postedDate: JSONData.datePosted,
   };
+}
+
+function extractSkills(description) {
+  if (!description) return [];
+  
+  const skills = new Set();
+  
+  // Create one big regex pattern
+  const pattern = new RegExp(`\\b(${allSkills.join('|')})\\b`, 'gi');
+  
+  const matches = description.match(pattern);
+  if (matches) {
+    matches.forEach(skill => {
+      skills.add(skill.toLowerCase());
+    });
+  }
+  
+  return Array.from(skills).sort();
 }
 
 console.log(await extractData(html, url));

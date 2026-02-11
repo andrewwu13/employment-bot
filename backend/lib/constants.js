@@ -79,3 +79,25 @@ export const COOKIE_DISMISS_SELECTORS = [
   '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll', // Cookiebot
 ];
 
+
+// All skills in one big pattern
+export const allSkills = [
+  // Languages
+  'JavaScript', 'TypeScript', 'Python', 'Java', 'C\\+\\+', 'C#', 'Ruby', 'PHP', 'Go', 'Rust', 'Swift', 'Kotlin',
+  // Frameworks
+  'React', 'Angular', 'Vue', 'Node\\.js', 'Express', 'Django', 'Flask', 'Spring', 'Laravel', '\\.NET', 'FastAPI', 'Spring Boot', 'Springboot',
+  // Databases
+  'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle', 'SQL Server', 'DynamoDB', 'Cassandra',
+  // Cloud
+  'AWS', 'Azure', 'GCP', 'Google Cloud', 'Docker', 'Kubernetes', 'Jenkins', 'Terraform', 'Ansible',
+  // Tools
+  'Git', 'GitHub', 'GitLab', 'Bitbucket', 'JIRA', 'Yocto', 'GCC', 'GDB', 'Grafana',
+  // Web
+  'HTML', 'CSS', 'GraphQL', 'REST', 'API', 'OAuth',
+  // Methodologies
+  'Agile', 'Scrum', 'Kanban', 'DevOps', 'CI\\/CD', 'Microservices',
+  // Data/AI
+  'Machine Learning', 'ML', 'AI', 'Deep Learning', 'TensorFlow', 'PyTorch',
+  // OS
+  'Linux', 'Unix', 'Windows', 'macOS', 'Android', 'iOS'
+];

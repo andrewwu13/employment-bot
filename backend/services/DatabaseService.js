@@ -32,7 +32,8 @@ export class DatabaseService {
   // Get all pending jobs
   async getPendingJobs(limit = 10) {
     try {
-      const snapshot = await db.collection("job_postings")
+      const dbCollection = process.env.DEV_MODE == "true" ? "test_postings" : "job_postings";
+      const snapshot = await db.collection(dbCollection)
         .where("status", "==", "pending")
         .limit(limit)
         .get();

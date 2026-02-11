@@ -15,13 +15,12 @@ export class Job {
     this.location = sourceData.location || '';
 
     this.skills = sourceData.skills || [];
-    this.qualifications = sourceData.qualifications || '';
     this.postedDate = sourceData.postedDate ? new Date(sourceData.postedDate) : new Date();
 
     // Metadata fields
     this.status = data.status || 'pending';
-    this.createdAt = data.createdAt ? new Date() : new Date();
-    this.postedAt = data.postedAt ? new Date() : null;
+    this.createdAt = data.createdAt || new Date();
+    this.postedAt = data.postedAt || new Date();
 
     // Email context (if available)
     this.emailSubject = data.emailSubject || '';
@@ -35,9 +34,7 @@ export class Job {
       title: this.title,
       company: this.company,
       location: this.location,
-
       skills: this.skills,
-      qualifications: this.qualifications,
       postedDate: this.postedDate,
 
       // Metadata
