@@ -1,21 +1,30 @@
 import { jest } from '@jest/globals';
-import { DatabaseService } from '../DatabaseService.js';
 
-// Mock the firebase config
-jest.mock('../../config/firebaseConfig.js', () => ({
-  db: {
-    collection: jest.fn()
-  }
+// ESM-compatible mocking: must use jest.unstable_mockModule before dynamic import
+const mockCollection = {
+  add: jest.fn(),
+  doc: jest.fn(),
+  where: jest.fn(),
+  limit: jest.fn()
+};
+
+const mockDb = {
+  collection: jest.fn(() => mockCollection)
+};
+
+jest.unstable_mockModule('../../config/firebaseConfig.js', () => ({
+  db: mockDb
 }));
+
+// Dynamic import AFTER mock registration
+const { DatabaseService } = await import('../DatabaseService.js');
 
 describe('DatabaseService', () => {
   let dbService;
-  let mockCollection;
   let mockDoc;
   let mockQuery;
 
-  beforeEach(async () => {
-    // Reset mocks
+  beforeEach(() => {
     mockDoc = {
       get: jest.fn(),
       update: jest.fn()
@@ -27,15 +36,9 @@ describe('DatabaseService', () => {
       get: jest.fn()
     };
 
-    mockCollection = {
-      add: jest.fn(),
-      doc: jest.fn(() => mockDoc),
-      where: jest.fn(() => mockQuery),
-      limit: jest.fn(() => mockQuery)
-    };
-
-    const { db } = await import('../../config/firebaseConfig.js');
-    db.collection.mockReturnValue(mockCollection);
+    // Wire up chaining
+    mockCollection.doc.mockReturnValue(mockDoc);
+    mockCollection.where.mockReturnValue(mockQuery);
     mockQuery.where.mockReturnValue(mockQuery);
     mockQuery.limit.mockReturnValue(mockQuery);
 
@@ -48,27 +51,29 @@ describe('DatabaseService', () => {
 
   describe('write', () => {
     it('should write job data to Firestore', async () => {
-      const jobData = {
-        url: 'https://example.com/job',
-        title: 'Software Engineer',
-        company: 'Test Co',
-        location: 'Remote',
-        description: 'Test job',
-        qualifications: 'Bachelor degree',
-        skills: ['JavaScript', 'Node.js'],
-        postedDate: new Date()
-      };
-
       mockCollection.add.mockResolvedValue({ id: 'doc-123' });
+
+      const jobData = {
+        jobTitle: 'Software Engineer',
+        companyName: 'Test Co',
+        applyLink: 'https://example.com/job',
+        scrapedData: {
+          url: 'https://example.com/job',
+          location: 'Remote',
+          qualifications: 'Bachelor degree',
+          skills: ['JavaScript', 'Node.js'],
+          postedDate: new Date()
+        }
+      };
 
       const docId = await dbService.write(jobData);
 
       expect(docId).toBe('doc-123');
       expect(mockCollection.add).toHaveBeenCalledWith(
         expect.objectContaining({
-          url: jobData.url,
-          title: jobData.title,
-          company: jobData.company
+          url: 'https://example.com/job',
+          title: 'Software Engineer',
+          company: 'Test Co'
         })
       );
     });
@@ -76,9 +81,9 @@ describe('DatabaseService', () => {
     it('should handle Job model instances', async () => {
       const { Job } = await import('../../models/Job.js');
       const job = new Job({
-        url: 'https://example.com/job',
-        title: 'Software Engineer',
-        company: 'Test Co'
+        jobTitle: 'Software Engineer',
+        companyName: 'Test Co',
+        applyLink: 'https://example.com/job'
       });
 
       mockCollection.add.mockResolvedValue({ id: 'doc-456' });
@@ -90,11 +95,9 @@ describe('DatabaseService', () => {
     });
 
     it('should throw error on write failure', async () => {
-      const jobData = {
-        title: 'Test Job'
-      };
-
       mockCollection.add.mockRejectedValue(new Error('Write failed'));
+
+      const jobData = { jobTitle: 'Test Job', companyName: 'Co' };
 
       await expect(dbService.write(jobData)).rejects.toThrow('Write failed');
     });
@@ -168,15 +171,12 @@ describe('DatabaseService', () => {
         title: 'Job 1',
         status: 'pending'
       });
-      expect(mockQuery.where).toHaveBeenCalledWith('status', '==', 'pending');
+      expect(mockCollection.where).toHaveBeenCalledWith('status', '==', 'pending');
       expect(mockQuery.limit).toHaveBeenCalledWith(10);
     });
 
     it('should fetch pending jobs with custom limit', async () => {
-      const mockSnapshot = {
-        forEach: jest.fn()
-      };
-
+      const mockSnapshot = { forEach: jest.fn() };
       mockQuery.get.mockResolvedValue(mockSnapshot);
 
       await dbService.getPendingJobs(5);
@@ -185,10 +185,7 @@ describe('DatabaseService', () => {
     });
 
     it('should return empty array when no pending jobs', async () => {
-      const mockSnapshot = {
-        forEach: jest.fn()
-      };
-
+      const mockSnapshot = { forEach: jest.fn() };
       mockQuery.get.mockResolvedValue(mockSnapshot);
 
       const result = await dbService.getPendingJobs();

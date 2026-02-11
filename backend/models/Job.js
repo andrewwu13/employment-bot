@@ -13,7 +13,7 @@ export class Job {
     //this.company = sourceData.company || data.companyName || '';
     this.company = data.companyName || '';
     this.location = sourceData.location || '';
-    this.description = sourceData.description || '';
+
     this.skills = sourceData.skills || [];
     this.qualifications = sourceData.qualifications || '';
     this.postedDate = sourceData.postedDate ? new Date(sourceData.postedDate) : new Date();
@@ -35,7 +35,7 @@ export class Job {
       title: this.title,
       company: this.company,
       location: this.location,
-      description: this.description,
+
       skills: this.skills,
       qualifications: this.qualifications,
       postedDate: this.postedDate,

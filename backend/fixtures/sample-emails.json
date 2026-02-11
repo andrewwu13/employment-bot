@@ -1,43 +1,21 @@
 [
-    {
-        "id": "mock-email-001",
-        "from": "Notify <no-reply@notify.careers>",
-        "subject": "Found 3 new job postings!",
-        "date": "2026-02-08T10:00:00Z",
-        "jobs": [
-            {
-                "companyName": "ICF Company",
-                "jobTitle": "Developer Intern, Summer 2026",
-                "applyLink": "https://links.notify.careers/CL0/https:%2F%2Ficf.wd5.myworkdayjobs.com%2FICFExternal_Career_Site%2Fjob%2FReston-VA%2FXMLNAME-2026-Summer-Intern--Developer_R2600424/1/0111019c40e937e0-ed201360-a136-4f6d-a839-d99d19c828ce-000000/2MSxpnejW_xtDpphpdL7bI2VdvBFTuFbOOo5ndAWpfk=249"
-            },
-            {
-                "companyName": "Ciena",
-                "jobTitle": "Friends and Family BA Analyst Intenr",
-                "applyLink": "https://links.notify.careers/CL0/https:%2F%2Fciena.wd5.myworkdayjobs.com%2FCareers%2Fjob%2FMontreal%2FFriends-and-Family--Data-Scientist-Intern---Services-BI---Analytics_R029879/1/0111019c40e937e0-ed201360-a136-4f6d-a839-d99d19c828ce-000000/G2jTQ_DjAdpNovoIDXcpjU1wHcsvawt89uOfuTXlcOA=249"
-            },
-            {
-                "companyName": "Robert Bosch Venture Capital",
-                "jobTitle": "Health Sensing and Machine Learning Intern",
-                "applyLink": "https://links.notify.careers/CL0/https:%2F%2Fjobs.smartrecruiters.com%2FBoschGroup%2F744000108018725/1/0111019c40614fd0-6e8b0b0e-e1e6-4483-8b7c-1af7d144eaff-000000/o71BlXyHqdMC0NMSgynRPqL3pZaxTxTuN6tFGyKwQ0U=249"
-            }
-        ]
-    },
-    {
-        "id": "mock-email-002",
-        "from": "Notify <no-reply@notify.careers>",
-        "subject": "2 new matches for your profile",
-        "date": "2026-02-07T14:30:00Z",
-        "jobs": [
-            {
-                "companyName": "State Street",
-                "jobTitle": "Operations SWE Intern Summer 2026",
-                "applyLink": "https://links.notify.careers/CL0/https:%2F%2Fstatestreet.wd1.myworkdayjobs.com%2FGlobal%2Fjob%2FBerwyn-Pennsylvania%2FState-Street---Global-Delivery---Alpha-Operations-Summer-Internship-2026_R-781935/1/0111019c400f6750-8fadebc1-69b4-4fe9-b931-cf859e290519-000000/xQ45bG-9yKjaLIar8TFSwVoqqATs71BR6JLzeNU-aTg=249"
-            },
-            {
-                "companyName": "Disney",
-                "jobTitle": "Software Engineer Intern",
-                "applyLink": "https://links.notify.careers/CL0/https:%2F%2Fdisney.wd5.myworkdayjobs.com%2Fdisneycareer%2Fjob%2FOrlando-FL-USA%2FSoftware-Engineering-Intern--Summer-Fall-2026_10140473/1/0111019c4607cad3-12453e8a-9614-4a48-b1f2-d6a1d7e402b8-000000/SPD5DsU1MA5SkxwN_TpTfAmcm4R44B5LvFJDcDMpqEs=249"
-            }
-        ]
-    }
+  {
+    "id": "mock-email-001",
+    "from": "Notify <no-reply@notify.careers>",
+    "subject": "Found 3 new job postings!",
+    "date": "2026-02-08T10:00:00Z",
+    "jobs": [
+      {
+        "companyName": "ICF Company",
+        "jobTitle": "Developer Intern, Summer 2026",
+        "applyLink": "https://links.notify.careers/CL0/https:%2F%2Ficf.wd5.myworkdayjobs.com%2FICFExternal_Career_Site%2Fjob%2FReston-VA%2FXMLNAME-2026-Summer-Intern--Developer_R2600424/1/0111019c40e937e0-ed201360-a136-4f6d-a839-d99d19c828ce-000000/2MSxpnejW_xtDpphpdL7bI2VdvBFTuFbOOo5ndAWpfk=249"
+      },
+      {
+        "companyName": "Ciena",
+        "jobTitle": "Friends and Family BA Analyst Intern",
+        "applyLink": "https://links.notify.careers/CL0/https:%2F%2Fciena.wd5.myworkdayjobs.com%2FCareers%2Fjob%2FMontreal%2FFriends-and-Family--Data-Scientist-Intern---Services-BI---Analytics_R029879/1/0111019c40e937e0-ed201360-a136-4f6d-a839-d99d19c828ce-000000/G2jTQ_DjAdpNovoIDXcpjU1wHcsvawt89uOfuTXlcOA=249"
+      }
+    ]
+  }
 ]
+

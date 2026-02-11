@@ -63,11 +63,6 @@ export const Logger = {
             console.log(`${this.colors.yellow}Skills:${this.colors.reset}      ${job.skills.join(', ')}`);
         }
 
-        if (job.description) {
-            console.log(`${this.colors.magenta}Description (Excerpt):${this.colors.reset}`);
-            console.log(`${this.colors.gray}${job.description.substring(0, 300)}...${this.colors.reset}`);
-        }
-
         if (job.qualifications) {
             console.log(`${this.colors.magenta}Qualifications (Excerpt):${this.colors.reset}`);
             console.log(`${this.colors.gray}${job.qualifications.substring(0, 300)}...${this.colors.reset}`);

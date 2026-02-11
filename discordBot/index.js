@@ -137,15 +137,7 @@ function createJobEmbedFromDB(job) {
     });
   }
 
-  // Add description (truncated)
-  if (job.description) {
-    const desc = job.description.substring(0, 300);
-    fields.push({
-      name: '📝 Description',
-      value: desc + (job.description.length > 300 ? '...' : ''),
-      inline: false
-    });
-  }
+
 
   return {
     title: job.title || 'Job Posting',

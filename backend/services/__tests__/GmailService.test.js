@@ -1,26 +1,27 @@
 import { jest } from '@jest/globals';
-import { GmailService } from '../GmailService.js';
 
-// Mock the gmail config
-jest.mock('../../config/gmailConfig.js', () => ({
-  gmail: {
-    users: {
-      messages: {
-        list: jest.fn(),
-        get: jest.fn(),
-        modify: jest.fn()
-      }
+// ESM-compatible mocking: must use jest.unstable_mockModule before dynamic import
+const mockGmail = {
+  users: {
+    messages: {
+      list: jest.fn(),
+      get: jest.fn(),
+      modify: jest.fn()
     }
   }
+};
+
+jest.unstable_mockModule('../../config/gmailConfig.js', () => ({
+  gmail: mockGmail
 }));
+
+// Dynamic import AFTER mock registration
+const { GmailService } = await import('../GmailService.js');
 
 describe('GmailService', () => {
   let gmailService;
-  let mockGmail;
 
-  beforeEach(async () => {
-    const { gmail } = await import('../../config/gmailConfig.js');
-    mockGmail = gmail;
+  beforeEach(() => {
     gmailService = new GmailService();
   });
 
@@ -47,7 +48,7 @@ describe('GmailService', () => {
               { name: 'Subject', value: 'Job Alert' },
               { name: 'Date', value: '2026-01-06' }
             ],
-            body: { data: Buffer.from('<html><table><tr><td>Company A</td><td><a href="http://job1.com">Job 1</a></td></tr></table></html>').toString('base64') }
+            body: { data: Buffer.from('<html><table><tr><th>Company</th><th>Job</th></tr><tr><td>Company A</td><td><a href="http://job1.com">Job 1</a></td></tr></table></html>').toString('base64') }
           }
         }
       };
@@ -233,7 +234,6 @@ describe('GmailService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('title');
-      expect(result[0]).toHaveProperty('description');
       expect(result[0]).toHaveProperty('color');
     });
 
@@ -251,7 +251,6 @@ describe('GmailService', () => {
       const result = await gmailService.cleanEmails(rawEmails);
 
       expect(result).toHaveLength(1);
-      expect(result[0].description).toBe('No job postings found.');
     });
 
     it('should chunk jobs into batches of 10', async () => {

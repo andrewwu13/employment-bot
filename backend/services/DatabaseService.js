@@ -2,6 +2,9 @@
 import { db } from '../config/firebaseConfig.js';
 import { Job } from '../models/Job.js';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 export class DatabaseService {
   constructor() {
 
@@ -68,7 +71,9 @@ export class DatabaseService {
       const job = jobData instanceof Job ? jobData : new Job(jobData);
       
       // add to DB using firebase-admin syntax
-      const docRef = await db.collection("job_postings").add(job.toFirestore());
+      const dbCollectionWrite = process.env.DEV_MODE === 'true' ? "test_postings" : "job_postings";
+      console.log(process.env.DEV_MODE === 'true' ? "in dev mode" : "prod");
+      const docRef = await db.collection(dbCollectionWrite).add(job.toFirestore());
 
       console.log("Document written with ID: ", docRef.id);
 

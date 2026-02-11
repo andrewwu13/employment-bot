@@ -6,7 +6,7 @@ import { Job } from '../backend/models/Job.js';
 async function runScrapeTest() {
     Logger.info("Starting scraper test...");
 
-    const url = "https://links.notify.careers/CL0/https:%2F%2Fcareers-mercuryinsurance.icims.com%2Fjobs%2F5926%2Fjob%3Fmobile=true%26needsRedirect=false/1/0111019b93a5292d-96396d8e-750a-4781-bd33-2dcd8e95de5b-000000/t484Xap5cbjt4WFmP_EgbD6iAFciyENSXfNHpd2yI7Q=244";
+    const url = "https://ciena.wd5.myworkdayjobs.com/Careers/job/Ottawa/Waveserver-Software-Developer-Co-op--Spring-Summer-2026-_R029532";
 
     try {
         const scraper = new JobScraper({ headless: true });

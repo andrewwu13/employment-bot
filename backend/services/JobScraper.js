@@ -14,7 +14,6 @@ const SITE_HANDLERS = {
       title: '[data-automation-id="jobPostingHeader"] h2, [data-automation-id="jobTitle"], .css-1q2dra3',
       company: '[data-automation-id="company"], [data-automation-id="organizationName"]',
       location: '[data-automation-id="locations"], [data-automation-id="location"]',
-      description: '[data-automation-id="jobPostingDescription"], [data-automation-id="jobDescription"]',
       qualifications: '[data-automation-id="jobPostingQualifications"]'
     },
     waitFor: '[data-automation-id="jobPostingHeader"]'
@@ -27,7 +26,6 @@ const SITE_HANDLERS = {
       title: '.posting-headline h2, .posting-title',
       company: '.main-header-logo img[alt], .company-name',
       location: '.posting-categories .location, .workplaceTypes',
-      description: '.posting-page .section-wrapper.content-wrapper, [data-qa="job-description"]',
       qualifications: '.posting-page .section-wrapper:has(h3:contains("Requirements"))'
     },
     waitFor: '.posting-headline'
@@ -40,7 +38,6 @@ const SITE_HANDLERS = {
       title: '.app-title, #header .job-title, h1.job-title',
       company: '.company-name, #header .company-name',
       location: '.location, .job-info .location',
-      description: '#content .section-wrapper, #app_body .content',
       qualifications: '#content .section-wrapper:has(h3:contains("Requirements"))'
     },
     waitFor: '.app-title, #header'
@@ -53,7 +50,6 @@ const SITE_HANDLERS = {
       title: 'h1:not([class*="cookie"]):not([class*="consent"]):not([class*="banner"]), [class*="job-title"], [class*="jobTitle"]',
       company: '[class*="company"], [class*="employer"]',
       location: '[class*="location"]',
-      description: '[class*="description"], [class*="job-description"], main, article',
       qualifications: '[class*="requirements"], [class*="qualifications"]'
     },
     waitFor: null
@@ -231,9 +227,6 @@ export class JobScraper {
     // Extract location
     const location = this.extractWithFallback($, selectors.location) || '';
 
-    // Extract description
-    const description = this.extractDescription($, selectors.description);
-
     // Extract qualifications
     const qualifications = this.extractWithFallback($, selectors.qualifications) || '';
 
@@ -249,7 +242,6 @@ export class JobScraper {
       title: this.cleanText(title),
       company: this.cleanText(company),
       location: this.cleanText(location),
-      description: this.cleanText(description).substring(0, 2000),
       qualifications: this.cleanText(qualifications).substring(0, 1500),
       skills: skills,
       postedDate: postedDate,
@@ -300,37 +292,6 @@ export class JobScraper {
     return null;
   }
 
-  /**
-   * Extract and clean description, avoiding cookie content
-   */
-  extractDescription($, selectorString) {
-    const selectors = selectorString ? selectorString.split(', ') : [];
-
-    for (const selector of selectors) {
-      try {
-        const elem = $(selector.trim()).first();
-        if (elem.length) {
-          // Remove any cookie/consent related elements within
-          elem.find('[class*="cookie"], [class*="consent"], [class*="banner"]').remove();
-          const text = elem.text().trim();
-          if (text && !this.looksLikeCookieContent(text) && text.length > 100) {
-            return text;
-          }
-        }
-      } catch (e) {
-        // Invalid selector, try next
-      }
-    }
-
-    // Fallback: try to find main content area
-    const mainContent = $('main, article, [role="main"]').first();
-    if (mainContent.length) {
-      mainContent.find('[class*="cookie"], [class*="consent"]').remove();
-      return mainContent.text().trim();
-    }
-
-    return '';
-  }
 
   /**
    * Detect if text looks like cookie consent content
@@ -368,10 +329,6 @@ export class JobScraper {
 
     if (this.looksLikeCookieContent(data.title)) {
       warnings.push('Title looks like cookie content!');
-    }
-
-    if (this.looksLikeCookieContent(data.description)) {
-      warnings.push('Description looks like cookie content!');
     }
 
     if (!data.location) {
@@ -436,7 +393,7 @@ export class JobScraper {
       if (matches) {
         matches.forEach(skill => {
           if (!skills.includes(skill) && skills.length < 10) {
-            skills.push(skill);
+            skills.push(skill.toLowerCase());
           }
         });
       }
