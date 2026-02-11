@@ -1,63 +1,60 @@
+// Create Discord embed from database job object
+export function createJobEmbedFromDB(job) {
+  const applyUrl = job.url || job.applyLink || null;
+  const fields = [];
 
-export function createJobEmbed(job) {
-    const fields = [];
+  // Company & Location on a single row
+  if (job.company) {
+    fields.push({
+      name: 'Company',
+      value: job.company,
+      inline: true
+    });
+  }
 
-    // Add company and location
-    if (job.company) {
-        fields.push({
-            name: '🏢 Company',
-            value: job.company,
-            inline: true
-        });
+  if (job.location) {
+    // Clean up location formatting (e.g. "Canada- Montreal- 2351 Alfred Nobel" → "Montreal, Canada")
+    const cleanLocation = job.location
+      .split(/[-–]/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .reverse()
+      .slice(0, 2)
+      .reverse()
+      .join(', ');
+    fields.push({
+      name: 'Location',
+      value: cleanLocation,
+      inline: true
+    });
+  }
+
+  // Skills displayed as inline code tags for a cleaner look
+  if (job.skills && job.skills.length > 0) {
+    const skillTags = job.skills.slice(0, 8).map(s => `\`${s}\``).join('  ');
+    fields.push({
+      name: 'Skills',
+      value: skillTags,
+      inline: false
+    });
+  }
+
+  // Format the posted date
+  let footerText = 'Employment Bot';
+  try {
+    const date = job.createdAt.toDate ? job.createdAt.toDate() : new Date(job.createdAt);
+    footerText += ` • ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  } catch {
+    // ignore date formatting errors
+  }
+
+  return {
+    title: `📋  ${job.title || 'Job Posting'}`,
+    url: applyUrl,
+    color: 0x5865F2, // Discord blurple
+    fields: fields,
+    footer: {
+      text: footerText
     }
-
-    if (job.location) {
-        fields.push({
-            name: '📍 Location',
-            value: job.location,
-            inline: true
-        });
-    }
-
-    // Add skills if available
-    if (job.skills && job.skills.length > 0) {
-        fields.push({
-            name: '💻 Skills',
-            value: job.skills.slice(0, 5).join(', '),
-            inline: false
-        });
-    }
-
-    // Add description (truncated)
-    if (job.description) {
-        const desc = job.description.substring(0, 300);
-        fields.push({
-            name: '📝 Description',
-            value: desc + (job.description.length > 300 ? '...' : ''),
-            inline: false
-        });
-    }
-
-    // Handle differences between raw DB job and enriched job
-    const title = job.title || 'Job Posting';
-    const url = job.url || job.applyLink;
-    const postedDate = job.postedDate || job.createdAt;
-    const timestamp = job.createdAt && typeof job.createdAt.toDate === 'function'
-        ? job.createdAt.toDate().toISOString()
-        : new Date().toISOString();
-
-    const footerText = job.createdAt && typeof job.createdAt.toDate === 'function'
-        ? `Posted: ${job.createdAt.toDate().toLocaleDateString()}`
-        : `Posted: ${new Date().toLocaleDateString()}`;
-
-    return {
-        title: title,
-        url: url,
-        color: 0x0099ff,
-        fields: fields,
-        footer: {
-            text: footerText
-        },
-        timestamp: timestamp
-    };
+  };
 }

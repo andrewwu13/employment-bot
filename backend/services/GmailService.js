@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import * as cheerio from 'cheerio';
-import { createJobEmbed } from '../../discordBot/utils/createEmbed.js';
 
 // gmail object created from OAuth process; can work with it now to read/send gmails
 import { gmail } from '../config/gmailConfig.js';
@@ -94,26 +93,6 @@ export class GmailService {
       Logger.logEmail(email);
     }
     return emails;
-  }
-
-  async cleanEmails(rawEmails) {
-    const allEmbeds = [];
-    const chunkSize = 10;
-
-    for (const email of rawEmails) {
-      const jobs = email.jobs || [];
-      if (jobs.length === 0) {
-        allEmbeds.push(createJobEmbed(email));
-        continue;
-      }
-
-      for (let i = 0; i < jobs.length; i += chunkSize) {
-        const chunk = { ...email, jobs: jobs.slice(i, i + chunkSize) };
-        allEmbeds.push(createJobEmbed(chunk, i / chunkSize, chunkSize));
-      }
-    }
-
-    return allEmbeds;
   }
 
 }

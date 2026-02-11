@@ -1,0 +1,21 @@
+[
+  {
+    "id": "mock-email-001",
+    "from": "Notify <no-reply@notify.careers>",
+    "subject": "Found 3 new job postings!",
+    "date": "2026-02-08T10:00:00Z",
+    "jobs": [
+      {
+        "companyName": "ICF Company",
+        "jobTitle": "Developer Intern, Summer 2026",
+        "applyLink": "https://links.notify.careers/CL0/https:%2F%2Ficf.wd5.myworkdayjobs.com%2FICFExternal_Career_Site%2Fjob%2FReston-VA%2FXMLNAME-2026-Summer-Intern--Developer_R2600424/1/0111019c40e937e0-ed201360-a136-4f6d-a839-d99d19c828ce-000000/2MSxpnejW_xtDpphpdL7bI2VdvBFTuFbOOo5ndAWpfk=249"
+      },
+      {
+        "companyName": "Ciena",
+        "jobTitle": "Friends and Family BA Analyst Intern",
+        "applyLink": "https://links.notify.careers/CL0/https:%2F%2Fciena.wd5.myworkdayjobs.com%2FCareers%2Fjob%2FMontreal%2FFriends-and-Family--Data-Scientist-Intern---Services-BI---Analytics_R029879/1/0111019c40e937e0-ed201360-a136-4f6d-a839-d99d19c828ce-000000/G2jTQ_DjAdpNovoIDXcpjU1wHcsvawt89uOfuTXlcOA=249"
+      }
+    ]
+  }
+]
+

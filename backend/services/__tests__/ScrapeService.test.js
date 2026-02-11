@@ -74,7 +74,6 @@ describe('ScrapeService', () => {
       mockGmailService.fetchUnreadEmails.mockResolvedValue(mockEmails);
       mockJobScraper.scrape.mockResolvedValue({
         title: 'Mock Scraped Job',
-        description: 'Mock description',
         location: 'Remote'
       });
       mockDatabaseService.write.mockResolvedValue('doc-123');
@@ -86,7 +85,7 @@ describe('ScrapeService', () => {
       expect(result.errors).toBe(0);
       expect(mockJobScraper.scrape).toHaveBeenCalledTimes(2);
       expect(mockDatabaseService.write).toHaveBeenCalledTimes(2);
-      
+
       // Check that scraped data was written correctly
       const firstCall = mockDatabaseService.write.mock.calls[0][0];
       expect(firstCall).toMatchObject({
@@ -121,12 +120,12 @@ describe('ScrapeService', () => {
       ];
 
       mockGmailService.fetchUnreadEmails.mockResolvedValue(mockEmails);
-      
+
       // First scrape succeeds, second fails
       mockJobScraper.scrape
         .mockResolvedValueOnce({ title: 'Success' })
         .mockRejectedValueOnce(new Error('Scraping failed'));
-      
+
       mockDatabaseService.write.mockResolvedValue('doc-123');
 
       const result = await scrapeService.runCron();
@@ -196,7 +195,7 @@ describe('ScrapeService', () => {
       await scrapeService.runCron();
 
       const writtenData = mockDatabaseService.write.mock.calls[0][0];
-      
+
       expect(writtenData).toMatchObject({
         companyName: 'Test Company',
         jobTitle: 'Software Engineer',
@@ -231,7 +230,6 @@ describe('ScrapeService', () => {
       mockGmailService.fetchUnreadEmails.mockResolvedValue(mockEmails);
       mockJobScraper.scrape.mockResolvedValue({
         title: 'Job Title',
-        description: undefined,
         location: 'Remote',
         salary: undefined,
         requirements: undefined,
@@ -248,7 +246,6 @@ describe('ScrapeService', () => {
       const writtenData = mockDatabaseService.write.mock.calls[0][0];
       expect(writtenData.scrapedData).toEqual({
         title: 'Job Title',
-        description: undefined,
         location: 'Remote',
         salary: undefined,
         requirements: undefined,
@@ -281,7 +278,7 @@ describe('ScrapeService', () => {
 
       expect(result.success).toBe(true);
       expect(result.processed).toBe(1);
-      
+
       const writtenData = mockDatabaseService.write.mock.calls[0][0];
       expect(writtenData.scrapedData).toEqual({});
       expect(writtenData.companyName).toBe('Test Company');
@@ -313,7 +310,7 @@ describe('ScrapeService', () => {
 
       expect(result.success).toBe(true);
       expect(result.processed).toBe(1);
-      
+
       const writtenData = mockDatabaseService.write.mock.calls[0][0];
       expect(writtenData.scrapedData).toBeNull();
     });
@@ -346,21 +343,19 @@ describe('ScrapeService', () => {
       ];
 
       mockGmailService.fetchUnreadEmails.mockResolvedValue(mockEmails);
-      
+
       // First returns full data, second returns partial, third returns empty
       mockJobScraper.scrape
         .mockResolvedValueOnce({
           title: 'Full Data',
-          description: 'Complete description',
           location: 'New York'
         })
         .mockResolvedValueOnce({
           title: 'Partial Data',
-          description: undefined,
           location: undefined
         })
         .mockResolvedValueOnce({});
-      
+
       mockDatabaseService.write.mockResolvedValue('doc-123');
 
       const result = await scrapeService.runCron();
@@ -372,11 +367,11 @@ describe('ScrapeService', () => {
 
       // Check first job has full data
       const firstJob = mockDatabaseService.write.mock.calls[0][0];
-      expect(firstJob.scrapedData.description).toBe('Complete description');
+      expect(firstJob.scrapedData.location).toBe('New York');
 
       // Check second job has undefined fields
       const secondJob = mockDatabaseService.write.mock.calls[1][0];
-      expect(secondJob.scrapedData.description).toBeUndefined();
+      expect(secondJob.scrapedData.location).toBeUndefined();
 
       // Check third job has empty scraped data
       const thirdJob = mockDatabaseService.write.mock.calls[2][0];

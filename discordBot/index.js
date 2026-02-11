@@ -4,6 +4,7 @@ import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { REST, Routes } from 'discord.js';
 import { DatabaseService } from '../backend/services/DatabaseService.js';
 import { Logger } from '../backend/utils/logger.js';
+import { createJobEmbedFromDB } from './utils/createEmbed.js';
 
 // Initialize backend services
 const dbService = new DatabaseService();
@@ -61,6 +62,9 @@ client.once(Events.ClientReady, (c) => {
   });
 });
 
+// set up channel (either testing or production)
+const discordChannelID = process.env.DEV_MODE == "false" ? process.env.JOB_CHANNEL_ID : process.env.JOB_CHANNEL_ID // to be replaced with the dev channel
+
 // Function to post pending jobs from database to Discord
 async function postPendingJobs() {
   try {
@@ -74,21 +78,32 @@ async function postPendingJobs() {
 
     Logger.info(`[DiscordBot] Found ${pendingJobs.length} pending jobs to post`);
 
-    const channel = await client.channels.fetch(process.env.JOB_CHANNEL_ID);
+    // Claim all jobs by marking as 'posting' BEFORE sending to Discord
+    // This prevents other cron runs or /post commands from picking them up
+    const jobIds = pendingJobs.map(job => job.id);
+    await dbService.markJobsAsPosting(jobIds);
+    Logger.info(`[DiscordBot] Claimed ${jobIds.length} jobs as 'posting'`);
+
+    // Specifying which channel to post to. 
+    const channel = await client.channels.fetch(discordChannelID);
 
     // Post each job as an embed
     for (let i = 0; i < pendingJobs.length; i++) {
       const job = pendingJobs[i];
 
-      // Create Discord embed from job data
-      const embed = createJobEmbedFromDB(job);
+      try {
+        // Create Discord embed from job data
+        const embed = createJobEmbedFromDB(job);
+        await channel.send({ embeds: [embed] });
 
-      await channel.send({ embeds: [embed] });
-
-      // Mark as posted in database
-      await dbService.markJobAsPosted(job.id);
-
-      Logger.success(`[DiscordBot] Posted job ${i + 1}/${pendingJobs.length}: ${job.title} at ${job.company}`);
+        // Mark as posted in database
+        await dbService.markJobAsPosted(job.id);
+        Logger.success(`[DiscordBot] Posted job ${i + 1}/${pendingJobs.length}: ${job.title} at ${job.company}`);
+      } catch (postError) {
+        // If posting fails, revert this job back to pending so it can be retried
+        Logger.error(`[DiscordBot] Failed to post job ${job.id}, reverting to pending:`, postError);
+        await dbService.markJobAsFailed(job.id);
+      }
 
       // Small delay to avoid rate limiting
       if (i < pendingJobs.length - 1) {
@@ -103,57 +118,7 @@ async function postPendingJobs() {
   }
 }
 
-// Create Discord embed from database job object
-function createJobEmbedFromDB(job) {
-  const fields = [];
 
-  // Add company and location
-  if (job.company) {
-    fields.push({
-      name: '🏢 Company',
-      value: job.company,
-      inline: true
-    });
-  }
-
-  if (job.location) {
-    fields.push({
-      name: '📍 Location',
-      value: job.location,
-      inline: true
-    });
-  }
-
-  // Add skills if available
-  if (job.skills && job.skills.length > 0) {
-    fields.push({
-      name: '💻 Skills',
-      value: job.skills.slice(0, 5).join(', '),
-      inline: false
-    });
-  }
-
-  // Add description (truncated)
-  if (job.description) {
-    const desc = job.description.substring(0, 300);
-    fields.push({
-      name: '📝 Description',
-      value: desc + (job.description.length > 300 ? '...' : ''),
-      inline: false
-    });
-  }
-
-  return {
-    title: job.title || 'Job Posting',
-    url: job.url || job.applyLink,
-    color: 0x0099ff,
-    fields: fields,
-    footer: {
-      text: `Posted: ${job.createdAt.toDate().toLocaleDateString()}`
-    },
-    timestamp: job.createdAt.toDate().toISOString()
-  };
-}
 
 // Command handlers
 client.on(Events.InteractionCreate, async interaction => {
@@ -201,12 +166,21 @@ client.on(Events.InteractionCreate, async interaction => {
         return;
       }
 
+      // Claim jobs first to prevent duplicates
+      const jobIds = pendingJobs.map(job => job.id);
+      await dbService.markJobsAsPosting(jobIds);
+
       let posted = 0;
       for (const job of pendingJobs) {
-        const embed = createJobEmbedFromDB(job);
-        await channel.send({ embeds: [embed] });
-        await dbService.markJobAsPosted(job.id);
-        posted++;
+        try {
+          const embed = createJobEmbedFromDB(job);
+          await channel.send({ embeds: [embed] });
+          await dbService.markJobAsPosted(job.id);
+          posted++;
+        } catch (postError) {
+          Logger.error(`[DiscordBot] Failed to post job ${job.id}, reverting:`, postError);
+          await dbService.markJobAsFailed(job.id);
+        }
       }
 
       await interaction.editReply(`✅ Posted ${posted} job(s) to this channel!`);
