@@ -200,6 +200,32 @@ describe('DatabaseService', () => {
     });
   });
 
+  describe('markJobsAsPosting', () => {
+    it('should batch-update multiple jobs to posting status', async () => {
+      const mockBatch = {
+        update: jest.fn(),
+        commit: jest.fn().mockResolvedValue()
+      };
+      mockDb.batch = jest.fn(() => mockBatch);
+
+      await dbService.markJobsAsPosting(['job-1', 'job-2', 'job-3']);
+
+      expect(mockBatch.update).toHaveBeenCalledTimes(3);
+      expect(mockBatch.commit).toHaveBeenCalled();
+    });
+  });
+
+  describe('markJobAsFailed', () => {
+    it('should revert job status to pending', async () => {
+      mockDoc.update.mockResolvedValue();
+
+      await dbService.markJobAsFailed('doc-123');
+
+      expect(mockDoc.update).toHaveBeenCalledWith({ status: 'pending' });
+      expect(mockCollection.doc).toHaveBeenCalledWith('doc-123');
+    });
+  });
+
   describe('markJobAsPosted', () => {
     it('should update job status to posted', async () => {
       mockDoc.update.mockResolvedValue();

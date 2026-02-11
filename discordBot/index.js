@@ -77,6 +77,12 @@ async function postPendingJobs() {
 
     Logger.info(`[DiscordBot] Found ${pendingJobs.length} pending jobs to post`);
 
+    // Claim all jobs by marking as 'posting' BEFORE sending to Discord
+    // This prevents other cron runs or /post commands from picking them up
+    const jobIds = pendingJobs.map(job => job.id);
+    await dbService.markJobsAsPosting(jobIds);
+    Logger.info(`[DiscordBot] Claimed ${jobIds.length} jobs as 'posting'`);
+
     // Specifying which channel to post to. 
     const channel = await client.channels.fetch(discordChannelID);
 
@@ -84,15 +90,19 @@ async function postPendingJobs() {
     for (let i = 0; i < pendingJobs.length; i++) {
       const job = pendingJobs[i];
 
-      // Create Discord embed from job data
-      const embed = createJobEmbedFromDB(job);
+      try {
+        // Create Discord embed from job data
+        const embed = createJobEmbedFromDB(job);
+        await channel.send({ embeds: [embed] });
 
-      await channel.send({ embeds: [embed] });
-
-      // Mark as posted in database
-      await dbService.markJobAsPosted(job.id);
-
-      Logger.success(`[DiscordBot] Posted job ${i + 1}/${pendingJobs.length}: ${job.title} at ${job.company}`);
+        // Mark as posted in database
+        await dbService.markJobAsPosted(job.id);
+        Logger.success(`[DiscordBot] Posted job ${i + 1}/${pendingJobs.length}: ${job.title} at ${job.company}`);
+      } catch (postError) {
+        // If posting fails, revert this job back to pending so it can be retried
+        Logger.error(`[DiscordBot] Failed to post job ${job.id}, reverting to pending:`, postError);
+        await dbService.markJobAsFailed(job.id);
+      }
 
       // Small delay to avoid rate limiting
       if (i < pendingJobs.length - 1) {
@@ -197,12 +207,21 @@ client.on(Events.InteractionCreate, async interaction => {
         return;
       }
 
+      // Claim jobs first to prevent duplicates
+      const jobIds = pendingJobs.map(job => job.id);
+      await dbService.markJobsAsPosting(jobIds);
+
       let posted = 0;
       for (const job of pendingJobs) {
-        const embed = createJobEmbedFromDB(job);
-        await channel.send({ embeds: [embed] });
-        await dbService.markJobAsPosted(job.id);
-        posted++;
+        try {
+          const embed = createJobEmbedFromDB(job);
+          await channel.send({ embeds: [embed] });
+          await dbService.markJobAsPosted(job.id);
+          posted++;
+        } catch (postError) {
+          Logger.error(`[DiscordBot] Failed to post job ${job.id}, reverting:`, postError);
+          await dbService.markJobAsFailed(job.id);
+        }
       }
 
       await interaction.editReply(`✅ Posted ${posted} job(s) to this channel!`);

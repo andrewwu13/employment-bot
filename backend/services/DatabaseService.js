@@ -1,6 +1,7 @@
 // read and writes from the firebase DB
 import { db } from '../config/firebaseConfig.js';
 import { Job } from '../models/Job.js';
+import { Logger } from '../utils/logger.js';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -15,15 +16,15 @@ export class DatabaseService {
     try {
       const docRef = db.collection("job_postings").doc(docId);
       const doc = await docRef.get();
-      
+
       if (!doc.exists) {
-        console.log("No such document!");
+        Logger.info("No such document!");
         return null;
       }
-      
+
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      console.error("Error reading document: ", error);
+      Logger.error("Error reading document: ", error);
       throw error;
     }
   }
@@ -35,16 +36,36 @@ export class DatabaseService {
         .where("status", "==", "pending")
         .limit(limit)
         .get();
-      
+
       const jobs = [];
       snapshot.forEach(doc => {
         jobs.push({ id: doc.id, ...doc.data() });
       });
-      
+
       return jobs;
     } catch (error) {
-      console.error("Error getting pending jobs: ", error);
+      Logger.error("Error getting pending jobs: ", error);
       throw error;
+    }
+  }
+
+  // Claim jobs by marking them as 'posting' so other cron runs won't pick them up
+  async markJobsAsPosting(jobIds) {
+    const batch = db.batch();
+    for (const id of jobIds) {
+      batch.update(db.collection("job_postings").doc(id), { status: "posting" });
+    }
+    await batch.commit();
+  }
+
+  // Revert a job back to pending if posting fails
+  async markJobAsFailed(docId) {
+    try {
+      await db.collection("job_postings").doc(docId).update({
+        status: "pending"
+      });
+    } catch (error) {
+      Logger.error("Error reverting job status: ", error);
     }
   }
 
@@ -55,11 +76,11 @@ export class DatabaseService {
         status: "posted",
         postedAt: new Date()
       });
-      
-      console.log("Document updated: ", docId);
+
+      Logger.info("Document updated: ", docId);
       return docId;
     } catch (error) {
-      console.error("Error updating document: ", error);
+      Logger.error("Error updating document: ", error);
       throw error;
     }
   }
@@ -69,19 +90,18 @@ export class DatabaseService {
       // convert to Job model object
       // this essentially "cleans" the JSON as there will be a bunch of other info we don't need, maintains consistency
       const job = jobData instanceof Job ? jobData : new Job(jobData);
-      
+
       // add to DB using firebase-admin syntax
       const dbCollectionWrite = process.env.DEV_MODE === 'true' ? "test_postings" : "job_postings";
-      console.log(process.env.DEV_MODE === 'true' ? "in dev mode" : "prod");
       const docRef = await db.collection(dbCollectionWrite).add(job.toFirestore());
 
-      console.log("Document written with ID: ", docRef.id);
+      Logger.info("Document written with ID: ", docRef.id);
 
       return docRef.id;
     } catch (error) {
-      console.error("Error adding document: ", error);
+      Logger.error("Error adding document: ", error);
       throw error;
     }
   }
-  
+
 }
