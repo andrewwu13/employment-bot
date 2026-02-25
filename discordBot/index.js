@@ -46,10 +46,10 @@ try {
 client.once(Events.ClientReady, (c) => {
   Logger.success(`Ready! Logged in as ${c.user.tag}`);
 
-  // Cron job - Post pending jobs from database every 59 seconds
-  cron.schedule("*/59 * * * * *", async () => {
+  // Cron job - Post pending jobs from database every 20 minutes
+  cron.schedule("0 */20 * * *", async () => {
     const now = new Date();
-    Logger.info(`[DiscordBot] Running job posting every 59 seconds | ${now.toISOString()}`);
+    Logger.info(`[DiscordBot] Running job posting every 20 minutes | ${now.toISOString()}`);
 
     try {
       await postPendingJobs();
