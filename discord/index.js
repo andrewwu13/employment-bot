@@ -2,9 +2,9 @@ import 'dotenv/config.js';
 import cron from "node-cron";
 import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { REST, Routes } from 'discord.js';
-import { DatabaseService } from '../backend/services/DatabaseService.js';
-import { Logger } from '../backend/utils/logger.js';
-import { createJobEmbedFromDB } from './utils/createEmbed.js';
+import { DatabaseService } from '../lib/services/database-service.js';
+import { Logger } from '../lib/utils/logger.js';
+import { createJobEmbedFromDB } from './utils/create-embed.js';
 
 // Initialize backend services
 const dbService = new DatabaseService();

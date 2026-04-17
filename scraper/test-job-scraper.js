@@ -1,6 +1,6 @@
-import { JobScraper } from '../backend/services/JobScraper.js';
-import { Logger } from '../backend/utils/logger.js';
-import { Job } from '../backend/models/Job.js';
+import { JobScraper } from '../lib/services/job-scraper.js';
+import { Logger } from '../lib/utils/logger.js';
+import { Job } from '../lib/models/Job.js';
 
 // testing scrape
 async function runScrapeTest() {

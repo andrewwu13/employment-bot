@@ -2,12 +2,12 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { DatabaseService } from "../backend/services/DatabaseService.js";
-import { GmailService } from "../backend/services/GmailService.js";
-import { MockGmailService } from "../backend/services/MockGmailService.js";
-import { JobScraper } from "../backend/services/JobScraper.js";
-import { ScrapeService } from "../backend/services/ScrapeService.js";
-import { Logger } from '../backend/utils/logger.js';
+import { DatabaseService } from "../lib/services/database-service.js";
+import { GmailService } from "../lib/services/gmail-service.js";
+import { MockGmailService } from "../lib/services/mock-gmail-service.js";
+import { JobScraper } from "../lib/services/job-scraper.js";
+import { ScrapeService } from "../lib/services/scrape-service.js";
+import { Logger } from '../lib/utils/logger.js';
 
 import cron from 'node-cron';
 

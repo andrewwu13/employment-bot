@@ -16,7 +16,7 @@ Built using Node.js, Playwright, and JavaScript.
 ### 1. Get Gmail Refresh Token
 Run the OAuth server:
 ```bash
-node backend/config/oauthConfig.js
+node lib/config/oauthConfig.js
 ```
 Then visit http://localhost:3000/auth and sign into the Google account that receives job notification emails. Copy the refresh token into your `.env` file as `GMAIL_REFRESH_TOKEN`.
 
@@ -78,7 +78,7 @@ npm run discord
 
 ```
 employment-bot/
-├── backend/           # Shared services and utilities
+├── lib/               # Shared services and utilities
 │   ├── config/        # OAuth and Gmail configuration
 │   ├── services/      # GmailService, ScrapeService, DatabaseService
 │   └── utils/         # Logger and helpers

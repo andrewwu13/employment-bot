@@ -1,6 +1,6 @@
 // testing the discord bot
-import { DatabaseService } from "../backend/services/DatabaseService.js";
-import { Logger } from "../backend/utils/logger.js";
+import { DatabaseService } from "../lib/services/database-service.js";
+import { Logger } from "../lib/utils/logger.js";
 
 const dbService = new DatabaseService();
 
