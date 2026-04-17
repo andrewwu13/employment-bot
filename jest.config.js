@@ -10,8 +10,8 @@ export default {
   ],
   collectCoverageFrom: [
     'backend/**/*.js',
-    'discordBot/**/*.js',
-    'scraperWorker/**/*.js',
+    'discord/**/*.js',
+    'scraper/**/*.js',
     '!**/__tests__/**',
     '!**/node_modules/**'
   ]

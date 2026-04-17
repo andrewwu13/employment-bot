@@ -82,8 +82,8 @@ employment-bot/
 │   ├── config/        # OAuth and Gmail configuration
 │   ├── services/      # GmailService, ScrapeService, DatabaseService
 │   └── utils/         # Logger and helpers
-├── discordBot/        # Discord bot entry point and commands
-├── scraperWorker/     # Standalone cron job runner for scraping
+├── discord/           # Discord bot entry point and commands
+├── scraper/           # Standalone cron job runner for scraping
 ├── compose.yaml       # Docker Compose configuration
 └── Dockerfile         # Container build configuration
 ```
