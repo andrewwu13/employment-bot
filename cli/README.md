@@ -1,16 +1,29 @@
 # Employment Bot CLI
 
-CLI tool for testing the employment-bot scraper without database writes.
+CLI tool for testing the employment-bot scraper without database writes. Built with TypeScript.
 
 ## Installation
 
 ```bash
 cd cli
 npm install
-npm link
+npm run build    # Compiles TypeScript to dist/
+npm link         # Creates `employ-cli` command globally
 ```
 
 This creates the `employ-cli` command globally on your system.
+
+## Development
+
+Run TypeScript directly without building (using tsx):
+
+```bash
+# Run scraper in development mode
+npm run dev -- --help
+
+# Scrape a URL in development mode
+npm run dev -- url "https://company.com/jobs/123" --json
+```
 
 ## Usage
 
@@ -44,6 +57,18 @@ employ-cli url "https://company.com/jobs/123" --visible --json
 ```bash
 employ-cli --help
 employ-cli url --help
+```
+
+## Project Structure
+
+```
+cli/
+├── src/              # TypeScript source files
+│   └── scrape.ts     # Main CLI entry point
+├── dist/             # Compiled JavaScript (auto-generated)
+│   └── scrape.js
+├── package.json
+└── tsconfig.json     # TypeScript configuration
 ```
 
 ## Uninstall
