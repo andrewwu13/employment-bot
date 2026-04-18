@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "job-scrape": "./bin/scrape.js"
+    "employ-cli": "./bin/scrape.js"
   },
   "scripts": {
     "start": "node index.js",

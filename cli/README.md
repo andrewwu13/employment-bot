@@ -7,7 +7,10 @@ CLI tool for testing the employment-bot scraper without database writes.
 ```bash
 cd cli
 npm install
+npm link
 ```
+
+This creates the `employ-cli` command globally on your system.
 
 ## Usage
 
@@ -15,19 +18,19 @@ npm install
 
 ```bash
 # Basic usage
-node bin/scrape.js url "https://company.com/jobs/123"
+employ-cli url "https://company.com/jobs/123"
 
 # Show browser window during scraping
-node bin/scrape.js url "https://company.com/jobs/123" --visible
+employ-cli url "https://company.com/jobs/123" --visible
 
 # Output raw JSON
-node bin/scrape.js url "https://company.com/jobs/123" --json
+employ-cli url "https://company.com/jobs/123" --json
 
 # Custom timeout (60 seconds)
-node bin/scrape.js url "https://company.com/jobs/123" --timeout 60000
+employ-cli url "https://company.com/jobs/123" --timeout 60000
 
 # Combine options
-node bin/scrape.js url "https://company.com/jobs/123" --visible --json
+employ-cli url "https://company.com/jobs/123" --visible --json
 ```
 
 ## Options
@@ -39,6 +42,15 @@ node bin/scrape.js url "https://company.com/jobs/123" --visible --json
 ## Help
 
 ```bash
-node bin/scrape.js --help
-node bin/scrape.js url --help
+employ-cli --help
+employ-cli url --help
+```
+
+## Uninstall
+
+To remove the global command:
+
+```bash
+cd cli
+npm unlink
 ```

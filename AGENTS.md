@@ -119,22 +119,23 @@ A separate CLI subproject for testing scraper functionality without database wri
 ```bash
 cd cli
 npm install
+npm link  # Creates `employ-cli` command globally
 ```
 
 ### Commands
 
 ```bash
 # Scrape a single URL
-node bin/scrape.js url "https://company.com/jobs/123"
+employ-cli url "https://company.com/jobs/123"
 
 # Show browser window during scraping
-node bin/scrape.js url "https://company.com/jobs/123" --visible
+employ-cli url "https://company.com/jobs/123" --visible
 
 # Output raw JSON
-node bin/scrape.js url "https://company.com/jobs/123" --json
+employ-cli url "https://company.com/jobs/123" --json
 
 # Combine options
-node bin/scrape.js url "https://company.com/jobs/123" --visible --json --timeout 60000
+employ-cli url "https://company.com/jobs/123" --visible --json --timeout 60000
 ```
 
 See `cli/README.md` for full documentation.
@@ -143,6 +144,6 @@ See `cli/README.md` for full documentation.
 
 - Branch from `main`: `feat/description` or `fix/description`
 - Keep commits atomic and focused
-- Write descriptive commit messages (imperative mood) - conventional commit format
+- Write descriptive, *one line* commit messages (imperative mood) - conventional commit format
 - Open PRs for all changes; no direct pushes to `main`
 - Resolve merge conflicts properly; never discard others' work
