@@ -69,6 +69,76 @@ These commands can destroy other agents' work:
 - Schema changes require backwards compatibility
 - Never drop columns or tables without deprecation period
 
+## Running the Application
+
+This project consists of two main components that run independently:
+
+### Scraper Worker (Email + Job Scraping)
+
+Fetches emails from Gmail, scrapes job postings, and stores them in Firebase:
+
+```bash
+# Production mode
+npm run scraper
+
+# Development mode with auto-restart on file changes
+npm run scraper:dev
+```
+
+### Discord Bot
+
+Posts jobs to Discord and handles slash commands:
+
+```bash
+# Production mode
+npm run discord
+
+# Development mode with auto-restart on file changes
+npm run discord:dev
+```
+
+### Testing
+
+```bash
+# Run all tests once
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+## CLI Tool (cli/)
+
+A separate CLI subproject for testing scraper functionality without database writes.
+
+### Setup
+
+```bash
+cd cli
+npm install
+```
+
+### Commands
+
+```bash
+# Scrape a single URL
+node bin/scrape.js url "https://company.com/jobs/123"
+
+# Show browser window during scraping
+node bin/scrape.js url "https://company.com/jobs/123" --visible
+
+# Output raw JSON
+node bin/scrape.js url "https://company.com/jobs/123" --json
+
+# Combine options
+node bin/scrape.js url "https://company.com/jobs/123" --visible --json --timeout 60000
+```
+
+See `cli/README.md` for full documentation.
+
 ## Git Workflow
 
 - Branch from `main`: `feat/description` or `fix/description`
