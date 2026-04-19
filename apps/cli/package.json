@@ -1,27 +1,25 @@
 {
-  "name": "employment-bot-cli",
+  "name": "@apps/cli",
   "version": "1.0.0",
   "description": "CLI tool for testing employment-bot scraper",
-  "main": "dist/index.js",
+  "main": "src/index.js",
   "type": "module",
   "bin": {
-    "employ-cli": "./dist/scrape.js"
+    "employ-cli": "./src/index.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsx src/scrape.ts",
-    "start": "node dist/scrape.js",
+    "start": "node src/scrape.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "commander": "^14.0.3"
+    "commander": "^14.0.3",
+    "dotenv": "^17.2.3",
+    "@repo/email": "*",
+    "@repo/scraper": "*",
+    "@repo/shared": "*"
   },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "tsx": "^4.7.0",
-    "typescript": "^5.4.0"
-  }
+  "devDependencies": {}
 }

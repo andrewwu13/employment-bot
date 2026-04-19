@@ -3,13 +3,17 @@ import cron from "node-cron";
 import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { REST, Routes } from 'discord.js';
 import { DatabaseService } from '@repo/database';
-import { ScrapeService } from '@repo/scraper';
+import { GmailService } from '@repo/email';
+import { ScrapeService } from '@repo/job-pipeline';
+import { JobScraper } from '@repo/scraper';
 import { Logger } from '@repo/shared';
 import { createJobEmbedFromDB } from './embed.js';
 
-// Initialize services
-const scraper = new ScrapeService();
+// Initialize and wire services
+const gmailService = new GmailService();
 const dbService = new DatabaseService();
+const jobScraper = new JobScraper();
+const pipeline = new ScrapeService(gmailService, dbService, jobScraper);
 
 const commands = [
   {
@@ -48,12 +52,21 @@ try {
 client.once(Events.ClientReady, (c) => {
   Logger.success(`Ready! Logged in as ${c.user.tag}`);
 
-  // Cron job - Post pending jobs from database every 20 minutes
+  // Cron job - Fetch emails, scrape, persist, then post to Discord
   cron.schedule("0 */20 * * *", async () => {
     const now = new Date();
-    Logger.info(`[DiscordBot] Running job posting every 20 minutes | ${now.toISOString()}`);
+    Logger.info(`[DiscordBot] Running pipeline | ${now.toISOString()}`);
 
     try {
+      // Step 1: Fetch emails, scrape job URLs, persist to Firestore
+      const result = await pipeline.runCron();
+      Logger.info(`[DiscordBot] Pipeline result: ${JSON.stringify(result)}`);
+    } catch (error) {
+      Logger.error("[DiscordBot] Pipeline error (continuing to post):", error);
+    }
+
+    try {
+      // Step 2: Post any pending jobs to Discord
       await postPendingJobs();
       Logger.success(`[DiscordBot] Job posting complete`);
     } catch (error) {

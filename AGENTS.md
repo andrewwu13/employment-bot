@@ -77,23 +77,7 @@ These commands can destroy other agents' work:
 
 ## Running the Application
 
-This project consists of two main components that run independently:
-
-### Scraper Worker (Email + Job Scraping)
-
-Fetches emails from Gmail, scrapes job postings, and stores them in Firebase:
-
-```bash
-# Production mode
-npm run scraper
-
-# Development mode with auto-restart on file changes
-npm run scraper:dev
-```
-
-### Discord Bot
-
-Posts jobs to Discord and handles slash commands:
+The Discord bot is the single orchestration point. One cron job handles the full pipeline: fetch emails, scrape job URLs, persist to Firestore, and post to Discord.
 
 ```bash
 # Production mode
@@ -102,6 +86,18 @@ npm run discord
 # Development mode with auto-restart on file changes
 npm run discord:dev
 ```
+
+### Gmail OAuth Setup
+
+The bot authenticates with Gmail via OAuth2. A one-time setup is required to obtain a refresh token:
+
+1. Create OAuth 2.0 credentials in [Google Cloud Console](https://console.cloud.google.com/) with redirect URI `http://localhost:3000/oauth2callback`.
+2. Set `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET` in `.env`.
+3. Run `node packages/email/src/oauth-config.js` and visit `http://localhost:3000/auth`.
+4. Authorize the Google account that receives job emails.
+5. Copy the logged refresh token into `.env` as `GMAIL_REFRESH_TOKEN`.
+
+At runtime, `packages/email/src/gmail-config.js` creates the OAuth2 client and the `googleapis` library handles access token refresh automatically.
 
 ### Testing
 
@@ -116,16 +112,15 @@ npm run test:watch
 npm run test:coverage
 ```
 
-## CLI Tool (cli/)
+## CLI Tool (apps/cli)
 
-A separate CLI subproject for testing scraper functionality without database writes.
+A testing tool for scraping and email inspection. No database writes.
 
 ### Setup
 
 ```bash
-cd cli
 npm install
-npm link  # Creates `employ-cli` command globally
+npm link --workspace=apps/cli  # Creates `employ-cli` command globally
 ```
 
 ### Commands
@@ -134,17 +129,17 @@ npm link  # Creates `employ-cli` command globally
 # Scrape a single URL
 employ-cli url "https://company.com/jobs/123"
 
-# Show browser window during scraping
-employ-cli url "https://company.com/jobs/123" --visible
+# Output raw JSON with custom timeout
+employ-cli url "https://company.com/jobs/123" --json --timeout 60000
 
-# Output raw JSON
-employ-cli url "https://company.com/jobs/123" --json
+# List job postings from unread Gmail emails (read-only, no mark as read)
+employ-cli emails
+employ-cli emails --limit 3
 
-# Combine options
-employ-cli url "https://company.com/jobs/123" --visible --json --timeout 60000
+# List AND scrape each job URL from emails
+employ-cli emails --scrape
+employ-cli emails --limit 2 --scrape --json
 ```
-
-See `cli/README.md` for full documentation.
 
 ## Git Workflow
 

@@ -6,7 +6,6 @@ import { SITE_HANDLERS, COOKIE_DISMISS_SELECTORS, allSkills } from '@repo/shared
 export class JobScraper {
   constructor(options = {}) {
     this.timeout = options.timeout ?? 30000;
-    this.waitForNetworkIdle = options.waitForNetworkIdle ?? true;
     this.headless = options.headless ?? true;
   }
 
@@ -49,12 +48,21 @@ export class JobScraper {
 
     const page = await context.newPage();
 
+    // Block non-essential resources to speed up page loads
+    await page.route('**/*', (route) => {
+      const type = route.request().resourceType();
+      if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
+        return route.abort();
+      }
+      return route.continue();
+    });
+
     try {
       Logger.info(`[JobScraper] Navigating to ${url}...`);
 
       // Navigate to page
       await page.goto(url, {
-        waitUntil: this.waitForNetworkIdle ? 'networkidle' : 'domcontentloaded',
+        waitUntil: 'domcontentloaded',
         timeout: this.timeout
       });
 
@@ -76,15 +84,8 @@ export class JobScraper {
         }
       }
 
-      await page.waitForTimeout(1200);
-
-      // Dismiss cookie banners BEFORE extracting content
-      await this.dismissCookieBanners(page);
-
-      // Auto-scroll to trigger lazy-loading
-      await this.autoscroll(page);
-      const html = await page.content(); // grabbing website html
-      const jobContent = await this.extractData(html, finalUrl); // normalizing all html data into object
+      const html = await page.content();
+      const jobContent = await this.extractData(html, finalUrl);
 
       return jobContent;
 
@@ -115,20 +116,92 @@ export class JobScraper {
     });
   }
 
-  // Extract data using site-specific selectors
+  // Extract data using JSON-LD if available, otherwise fall back to HTML parsing
   async extractData(pageHTML, url) {
     const $ = cheerio.load(pageHTML);
+
+    // Try JSON-LD first
     const jsonLdScript = $('script[type="application/ld+json"]').html();
-    const JSONData = JSON.parse(jsonLdScript);
+    if (jsonLdScript) {
+      try {
+        let JSONData = JSON.parse(jsonLdScript);
+
+        // Some pages embed an array of JSON-LD objects
+        if (Array.isArray(JSONData)) {
+          JSONData = JSONData.find(item => item['@type'] === 'JobPosting') || JSONData[0];
+        }
+
+        if (JSONData && JSONData.title) {
+          Logger.info('[JobScraper] Extracted data from JSON-LD');
+          return {
+            url,
+            title: JSONData.title,
+            company: JSONData.hiringOrganization?.name ?? null,
+            location: JSONData.jobLocation?.address?.addressLocality ?? null,
+            skills: this.extractSkills(JSONData.description ?? ''),
+            postedDate: JSONData.datePosted ?? null,
+          };
+        }
+      } catch (e) {
+        Logger.warn('[JobScraper] JSON-LD parse failed, falling back to HTML');
+      }
+    }
+
+    // Fallback: extract from HTML elements
+    Logger.info('[JobScraper] Extracting data from HTML (no JSON-LD found)');
+
+    // Title: try <title>, <h1>, or og:title
+    const rawTitle = $('title').text().trim()
+      || $('h1').first().text().trim()
+      || $('meta[property="og:title"]').attr('content')
+      || '';
+
+    // Company: try og:site_name, or parse from title (often "Job Title - Company")
+    const company = $('meta[property="og:site_name"]').attr('content')
+      || this.parseCompanyFromTitle(rawTitle)
+      || null;
+
+    // Clean the title by removing the company name and job ID suffixes
+    const title = this.cleanTitle(rawTitle, company);
+
+    // Location: try meta tags or common selectors
+    const location = $('meta[name="geo.placename"]').attr('content')
+      || $('meta[property="og:locale"]').attr('content')
+      || null;
+
+    // Description: grab body text for skills extraction
+    const bodyText = $('body').text();
 
     return {
-      url: url,
-      title: JSONData.title,
-      company: JSONData.hiringOrganization.name,
-      location: JSONData.jobLocation.address.addressLocality,
-      skills: this.extractSkills(JSONData.description),
-      postedDate: JSONData.datePosted,
+      url,
+      title: title || null,
+      company,
+      location,
+      skills: this.extractSkills(bodyText),
+      postedDate: null,
     };
+  }
+
+  // Parse company name from title tag (e.g., "Software Engineer - 210946 - Electronic Arts")
+  parseCompanyFromTitle(title) {
+    const parts = title.split(/\s[-–|]\s/);
+    if (parts.length >= 2) {
+      return parts[parts.length - 1].trim();
+    }
+    return null;
+  }
+
+  // Clean title by removing company name and numeric job IDs
+  cleanTitle(rawTitle, company) {
+    let title = rawTitle;
+    // Remove company name from end
+    if (company) {
+      const companyPattern = new RegExp(`\\s*[-–|]\\s*${company.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i');
+      title = title.replace(companyPattern, '');
+    }
+    // Remove numeric job IDs (e.g., "- 210946")
+    title = title.replace(/\s*[-–|]\s*\d{4,}\s*/g, '');
+    return title.trim();
   }
 
   // Detect if text looks like cookie consent content
@@ -155,19 +228,19 @@ export class JobScraper {
 
   extractSkills(description) {
     if (!description) return [];
-    
+
     const skills = new Set();
-    
+
     // Create one big regex pattern
     const pattern = new RegExp(`\\b(${allSkills.join('|')})\\b`, 'gi');
-    
+
     const matches = description.match(pattern);
     if (matches) {
       matches.forEach(skill => {
         skills.add(skill.toLowerCase());
       });
     }
-    
+
     return Array.from(skills).sort();
   }
 }

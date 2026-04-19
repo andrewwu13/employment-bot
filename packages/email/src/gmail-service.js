@@ -10,13 +10,18 @@ dotenv.config();
 // reads from gmails, returns as JSON
 export class GmailService {
 
-  // fetches unread emails from gmail inbox, given a specified sender
-  // should only return the two links (idk what links they are we will see)
-  async fetchUnreadEmails(sender) {
+  // Fetches unread emails from Gmail inbox, given a specified sender.
+  // Options:
+  //   markAsRead (default: true) - whether to mark fetched emails as read
+  //   limit (default: Infinity) - max number of emails to process
+  async fetchUnreadEmails(sender, options = {}) {
+    const { markAsRead = true, limit = Infinity } = options;
+
     const query = sender ? `is:unread from:${sender}` : "is:unread";
     const list = await gmail.users.messages.list({
       userId: "me",
       q: query,
+      maxResults: Number.isFinite(limit) ? limit : undefined,
     });
 
     if (!list.data.messages) return [];
@@ -81,11 +86,13 @@ export class GmailService {
         jobs: jobs
       });
 
-      await gmail.users.messages.modify({
-        userId: "me",
-        id: msg.id,
-        requestBody: { removeLabelIds: ["UNREAD"] }
-      });
+      if (markAsRead) {
+        await gmail.users.messages.modify({
+          userId: "me",
+          id: msg.id,
+          requestBody: { removeLabelIds: ["UNREAD"] }
+        });
+      }
     }
 
     // logging the jobs that are found

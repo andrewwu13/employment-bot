@@ -1,81 +1,90 @@
 # Employment Bot CLI
 
-CLI tool for testing the employment-bot scraper without database writes. Built with TypeScript.
+CLI tool for testing the employment-bot scraper and email fetching. No database writes.
 
-## Installation
+## Setup
+
+From the monorepo root:
 
 ```bash
-cd cli
 npm install
-npm run build    # Compiles TypeScript to dist/
-npm link         # Creates `employ-cli` command globally
+npm link --workspace=apps/cli
 ```
 
-This creates the `employ-cli` command globally on your system.
+This creates the `employ-cli` command globally.
 
-## Development
+## Commands
 
-Run TypeScript directly without building (using tsx):
+### `employ-cli auth`
+
+Authenticate with Gmail OAuth2. Reads `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET` from `.env`, opens a browser for Google authorization, and writes the refresh token back to `.env`.
 
 ```bash
-# Run scraper in development mode
-npm run dev -- --help
-
-# Scrape a URL in development mode
-npm run dev -- url "https://company.com/jobs/123" --json
+employ-cli auth
 ```
 
-## Usage
+Requires `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET` to be set in `.env` first. See the root README for how to obtain these from Google Cloud Console.
 
-### Scrape a single URL
+### `employ-cli url <jobUrl>`
+
+Scrape a single job posting URL and display the extracted data.
 
 ```bash
 # Basic usage
 employ-cli url "https://company.com/jobs/123"
-
-# Show browser window during scraping
-employ-cli url "https://company.com/jobs/123" --visible
 
 # Output raw JSON
 employ-cli url "https://company.com/jobs/123" --json
 
 # Custom timeout (60 seconds)
 employ-cli url "https://company.com/jobs/123" --timeout 60000
-
-# Combine options
-employ-cli url "https://company.com/jobs/123" --visible --json
 ```
 
-## Options
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-j, --json` | Output raw JSON | `false` |
+| `-t, --timeout <ms>` | Page load timeout | `30000` |
 
-- `-v, --visible` - Show browser window (disable headless mode)
-- `-j, --json` - Output raw JSON instead of formatted logs
-- `-t, --timeout <ms>` - Page load timeout in milliseconds (default: 30000)
+### `employ-cli emails`
 
-## Help
+List job postings from unread Gmail emails. Read-only: emails are **not** marked as read.
 
 ```bash
-employ-cli --help
-employ-cli url --help
+# List jobs from up to 5 emails
+employ-cli emails
+
+# Limit to 3 emails
+employ-cli emails --limit 3
+
+# List and scrape each job URL
+employ-cli emails --scrape
+
+# Combine options
+employ-cli emails --limit 2 --scrape --json
 ```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-l, --limit <count>` | Max emails to fetch | `5` |
+| `-s, --scrape` | Scrape each job URL after listing | `false` |
+| `-j, --json` | Output raw JSON | `false` |
+| `-t, --timeout <ms>` | Scrape timeout | `30000` |
 
 ## Project Structure
 
 ```
-cli/
-├── src/              # TypeScript source files
-│   └── scrape.ts     # Main CLI entry point
-├── dist/             # Compiled JavaScript (auto-generated)
-│   └── scrape.js
-├── package.json
-└── tsconfig.json     # TypeScript configuration
+apps/cli/
+├── src/
+│   ├── index.js              # Entry point, registers commands
+│   └── commands/
+│       ├── auth.js           # Gmail OAuth2 flow
+│       ├── emails.js         # Email listing and scraping
+│       └── url.js            # Single URL scraping
+└── package.json
 ```
 
 ## Uninstall
 
-To remove the global command:
-
 ```bash
-cd cli
-npm unlink
+npm unlink --workspace=apps/cli
 ```
