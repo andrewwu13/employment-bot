@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import * as cheerio from 'cheerio';
-import { Logger } from '../utils/logger.js';
-import { SITE_HANDLERS, COOKIE_DISMISS_SELECTORS, allSkills } from '../constants.js';
+import { Logger } from '@repo/shared';
+import { SITE_HANDLERS, COOKIE_DISMISS_SELECTORS, allSkills } from '@repo/shared';
 
 export class JobScraper {
   constructor(options = {}) {
