@@ -1,12 +1,9 @@
-#!/usr/bin/env node
-
-import { Command, OptionValues } from 'commander/typings/esm.mjs/typings/esm.mjs';
-import { fileURLToPath } from 'url';
+import { Command, type OptionValues } from 'commander'; import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '..', '..');
+const projectRoot = join(__dirname, '..', '..', '..');
 
 // Import from main project using dynamic imports
 const { JobScraper } = await import(join(projectRoot, 'lib/services/job-scraper.js'));
