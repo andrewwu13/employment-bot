@@ -1,4 +1,4 @@
-import { Logger } from '../utils/logger.js';
+import { Logger } from '@repo/shared';
 
 export class ScrapeService {
   constructor(

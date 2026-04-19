@@ -30,6 +30,7 @@
     "packages/shared",
     "packages/ai",
     "packages/database",
-    "packages/email"
+    "packages/email",
+    "packages/job-pipeline"
   ]
 }

@@ -7,7 +7,7 @@
     "module": "esnext",
     "target": "es2020",
     "allowJs": true,
-    "checkJs": true,
+    //"checkJs": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "moduleResolution": "node"
