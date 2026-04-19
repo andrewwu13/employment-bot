@@ -1,0 +1,25 @@
+{
+  "name": "@apps/discord",
+  "version": "1.0.0",
+  "description": "Discord bot for employment-bot",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=../../.env src/index.js",
+    "dev": "nodemon --env-file=../../.env src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "discord.js": "^14.24.2",
+    "dotenv": "^17.2.3",
+    "node-cron": "^4.2.1",
+    "@repo/database": "*",
+    "@repo/email": "*",
+    "@repo/job-pipeline": "*",
+    "@repo/scraper": "*",
+    "@repo/shared": "*"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}

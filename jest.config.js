@@ -9,9 +9,9 @@ export default {
     '**/?(*.)+(spec|test).js'
   ],
   collectCoverageFrom: [
-    'backend/**/*.js',
-    'discordBot/**/*.js',
-    'scraperWorker/**/*.js',
+    'lib/**/*.js',
+    'discord/**/*.js',
+    'scraper/**/*.js',
     '!**/__tests__/**',
     '!**/node_modules/**'
   ]

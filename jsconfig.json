@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@repo/*": ["./packages/*/src"]
+    },
+    "module": "esnext",
+    "target": "es2020",
+    "allowJs": true,
+    //"checkJs": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node"
+  },
+  "include": [
+    "apps",
+    "packages",
+    "test",
+    "*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules"
+  ]
+}

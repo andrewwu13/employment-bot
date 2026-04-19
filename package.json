@@ -1,31 +1,15 @@
 {
   "name": "employment-bot",
   "version": "1.0.0",
-  "description": "Discord bot to automate job postings and streamline the application process.",
-  "main": "index.js",
+  "private": true,
   "scripts": {
+    "discord": "npm run start --workspace=@apps/discord",
+    "discord:dev": "npm run dev --workspace=@apps/discord",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "scraper": "node scraperWorker/index.js",
-    "scraper:dev": "nodemon scraperWorker/index.js",
-    "discord": "node discordBot/index.js",
-    "discord:dev": "nodemon discordBot/index.js",
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/andrewwu13/employment-bot.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "module",
-  "bugs": {
-    "url": "https://github.com/andrewwu13/employment-bot/issues"
-  },
-  "homepage": "https://github.com/andrewwu13/employment-bot#readme",
   "dependencies": {
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",
@@ -33,7 +17,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "firebase": "^12.6.0",
-    "firebase-admin": "^13.6.0",
+    "firebase-admin": "^10.3.0",
     "googleapis": "^166.0.0",
     "node-cron": "^4.2.1",
     "playwright": "^1.56.1"
@@ -41,6 +25,16 @@
   "devDependencies": {
     "@jest/globals": "^30.2.0",
     "jest": "^30.2.0",
-    "nodemon": "^3.1.11"
-  }
+    "nodemon": "^3.1.11",
+    "typescript": "^6.0.3"
+  },
+  "workspaces": [
+    "packages/scraper",
+    "packages/shared",
+    "packages/ai",
+    "packages/database",
+    "packages/email",
+    "packages/job-pipeline",
+    "apps/*"
+  ]
 }
