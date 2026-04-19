@@ -1,5 +1,11 @@
 # Development Rules
 
+## Project Structure
+
+This project utilizes a monorepo structure, organized into `apps/` and `packages/` directories.
+- `apps/`: Contains deployable applications such as the Discord bot and CLI tool.
+- `packages/`: Houses shared libraries and functionalities used across different applications, like AI, database, email, and scraper modules.
+
 ## Conversational Style
 
 - Keep answers short and concise
