@@ -1,5 +1,4 @@
-import 'dotenv/config.js';
-import cron from "node-cron";
+import cron from 'node-cron';
 import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { REST, Routes } from 'discord.js';
 import { DatabaseService } from '@repo/database';
@@ -9,11 +8,13 @@ import { JobScraper } from '@repo/scraper';
 import { Logger } from '@repo/shared';
 import { createJobEmbedFromDB } from './embed.js';
 
-// Initialize and wire services
+// Initialize and wire services with configurable cooldown
+const DEFAULT_SCRAPE_COOLDOWN = 1000; // 1 second default for Discord rate limits
+const cooldown = parseInt(process.env.SCRAPE_COOLDOWN_MS, 10) || DEFAULT_SCRAPE_COOLDOWN;
+
 const gmailService = new GmailService();
 const dbService = new DatabaseService();
 const jobScraper = new JobScraper();
-const pipeline = new ScrapeService(gmailService, dbService, jobScraper);
 
 const commands = [
   {
@@ -52,30 +53,133 @@ try {
 client.once(Events.ClientReady, (c) => {
   Logger.success(`Ready! Logged in as ${c.user.tag}`);
 
-  // Cron job - Fetch emails, scrape, persist, then post to Discord
-  cron.schedule("0 */20 * * *", async () => {
-    const now = new Date();
-    Logger.info(`[DiscordBot] Running pipeline | ${now.toISOString()}`);
+  // Run immediately on startup if not disabled
+  if (process.env.RUN_ON_STARTUP !== 'false') {
+    Logger.info('[DiscordBot] Running initial pipeline on startup...');
+    runPipelineAndPost();
+  }
 
-    try {
-      // Step 1: Fetch emails, scrape job URLs, persist to Firestore
-      const result = await pipeline.runCron();
-      Logger.info(`[DiscordBot] Pipeline result: ${JSON.stringify(result)}`);
-    } catch (error) {
-      Logger.error("[DiscordBot] Pipeline error (continuing to post):", error);
-    }
-
-    try {
-      // Step 2: Post any pending jobs to Discord
-      await postPendingJobs();
-      Logger.success(`[DiscordBot] Job posting complete`);
-    } catch (error) {
-      Logger.error("[DiscordBot] Error in job posting:", error);
-    }
-  }, {
+  // Cron job - Fetch emails, scrape, persist, then post to Discord (every 20 minutes)
+  cron.schedule("0 */20 * * *", runPipelineAndPost, {
     timezone: "America/Toronto"
   });
 });
+
+async function runPipelineAndPost() {
+  const now = new Date();
+  Logger.info(`[DiscordBot] Starting scrape-and-post pipeline | ${now.toISOString()}`);
+
+  try {
+    // Fetch emails
+    const rawEmails = await fetchEmails();
+    if (!rawEmails?.length) {
+      Logger.info('[DiscordBot] No new emails found');
+      return;
+    }
+
+    // Parse jobs from emails
+    const jobs = parseJobsFromEmails(rawEmails);
+    if (!jobs?.length) {
+      Logger.info('[DiscordBot] No job postings found in emails');
+      return;
+    }
+
+    // Get Discord channel
+    const channel = await client.channels.fetch(discordChannelID);
+    Logger.info(`[DiscordBot] Processing ${jobs.length} job(s) with ${cooldown}ms delay`);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Process each job: scrape → save → post
+    for (let i = 0; i < jobs.length; i++) {
+      const job = jobs[i];
+      Logger.info(`[DiscordBot] [${i + 1}/${jobs.length}] Processing: ${job.jobTitle} at ${job.companyName}`);
+
+      try {
+        // Step 1: Scrape the job
+        Logger.info(`[DiscordBot] Scraping: ${job.applyLink}`);
+        const scrapedData = await jobScraper.scrape(job.applyLink);
+
+        // Step 2: Save to DB
+        const enrichedJob = {
+          ...job,
+          scrapedData,
+          status: 'posting',
+          createdAt: new Date(),
+          postedAt: null,
+          title: job.jobTitle,
+          company: job.companyName,
+          location: scrapedData.location,
+          skills: scrapedData.skills,
+          url: job.applyLink
+        };
+        const docId = await dbService.write(enrichedJob);
+        Logger.info(`[DiscordBot] Saved to DB: ${docId}`);
+
+        // Step 3: Create and send embed to Discord
+        const embed = createJobEmbedFromDB(enrichedJob);
+        await channel.send({ embeds: [embed] });
+
+        // Step 4: Mark as posted
+        await dbService.markJobAsPosted(docId);
+        Logger.success(`[DiscordBot] ✓ Posted ${job.jobTitle} at ${job.companyName}`);
+        successCount++;
+
+      } catch (error) {
+        Logger.error(`[DiscordBot] ✗ Failed to process job ${job.jobTitle}:`, error.message);
+        errorCount++;
+        // Continue to next job even if one fails
+      }
+
+      // Delay before next job (rate limit protection)
+      if (i < jobs.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, cooldown));
+      }
+    }
+
+    Logger.success(`[DiscordBot] Pipeline complete: ${successCount} posted, ${errorCount} failed`);
+
+  } catch (error) {
+    Logger.error('[DiscordBot] Pipeline error:', error);
+  }
+}
+
+async function fetchEmails() {
+  const recipient = 'no-reply@notify.careers';
+  const rawEmails = await gmailService.fetchUnreadEmails(recipient);
+  
+  if (!rawEmails?.length) {
+    Logger.info('[DiscordBot] No unread emails found');
+    return null;
+  }
+  
+  Logger.info(`[DiscordBot] Found ${rawEmails.length} unread emails`);
+  return rawEmails;
+}
+
+function parseJobsFromEmails(rawEmails) {
+  const allJobs = [];
+  
+  for (const email of rawEmails) {
+    const jobs = email.jobs || [];
+    for (const job of jobs) {
+      allJobs.push({
+        ...job,
+        emailSubject: email.subject,
+        emailDate: email.date,
+        emailFrom: email.from
+      });
+    }
+  }
+  
+  if (!allJobs.length) {
+    return null;
+  }
+  
+  Logger.info(`[DiscordBot] Extracted ${allJobs.length} job posting(s) from emails`);
+  return allJobs;
+}
 
 // set up channel (either testing or production)
 const discordChannelID = process.env.DEV_MODE == "false" ? process.env.JOB_CHANNEL_ID : process.env.JOB_CHANNEL_ID // to be replaced with the dev channel

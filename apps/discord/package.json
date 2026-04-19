@@ -2,11 +2,11 @@
   "name": "@apps/discord",
   "version": "1.0.0",
   "description": "Discord bot for employment-bot",
-  "main": "index.js",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "node --env-file=../../.env src/index.js",
+    "dev": "nodemon --env-file=../../.env src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
