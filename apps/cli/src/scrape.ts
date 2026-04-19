@@ -1,4 +1,5 @@
-import { Command, type OptionValues } from 'commander'; import { fileURLToPath } from 'url';
+import { Command, type OptionValues } from 'commander'; 
+import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);

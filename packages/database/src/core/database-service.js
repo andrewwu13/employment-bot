@@ -1,7 +1,7 @@
 // read and writes from the firebase DB
 import { db } from '../config/firebase-config.js';
-import { Job } from '../models/Job.js';
-import { Logger } from '../utils/logger.js';
+import { Job } from '@repo/shared';
+import { Logger } from '@repo/shared';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -39,6 +39,26 @@ export class DatabaseService {
     try {
       const snapshot = await db.collection(this._getCollection())
         .where("status", "==", "pending")
+        .limit(limit)
+        .get();
+
+      const jobs = [];
+      snapshot.forEach(doc => {
+        jobs.push({ id: doc.id, ...doc.data() });
+      });
+
+      return jobs;
+    } catch (error) {
+      Logger.error("Error getting pending jobs: ", error);
+      throw error;
+    }
+  }
+
+  // Get posted jobs in the DB, for testing 
+  async getPostedJobs(limit = 10) {
+    try {
+      const snapshot = await db.collection(this._getCollection())
+        .where("status", "==", "posted")
         .limit(limit)
         .get();
 
