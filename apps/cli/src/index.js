@@ -10,7 +10,7 @@ import { registerLogCommand } from './commands/log.js';
 const program = new Command();
 
 program
-  .name('employ-cli')
+  .name('emp')
   .description('CLI tool for testing job scraper')
   .version('1.0.0');
 
