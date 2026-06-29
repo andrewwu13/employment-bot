@@ -49,9 +49,9 @@ export function createJobEmbedFromDB(job) {
   }
 
   return {
-    title: `📋  ${job.title || 'Job Posting'}`,
+    title: `${job.title || 'Job Posting'}`,
     url: applyUrl,
-    color: 0x5865F2, // Discord blurple
+    color: 0x5865F2,
     fields: fields,
     footer: {
       text: footerText
