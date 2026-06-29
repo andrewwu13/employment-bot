@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@inquirer/prompts": "^8.5.2",
     "@repo/email": "*",
     "@repo/scraper": "*",
     "@repo/shared": "*",

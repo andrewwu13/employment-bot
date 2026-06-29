@@ -6,6 +6,7 @@ import { registerUrlCommand } from './commands/url.js';
 import { registerEmailsCommand } from './commands/emails.js';
 import { registerAuthCommand } from './commands/auth.js';
 import { registerLogCommand } from './commands/log.js';
+import { registerTargetsCommand } from './commands/targets.js';
 
 const program = new Command();
 
@@ -18,5 +19,6 @@ registerUrlCommand(program);
 registerEmailsCommand(program);
 registerAuthCommand(program);
 registerLogCommand(program);
+registerTargetsCommand(program);
 
 program.parse();
