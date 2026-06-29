@@ -6,6 +6,11 @@
   "exports": {
     ".": "./src/index.js"
   },
+  "dependencies": {
+    "@repo/shared": "*",
+    "dotenv": "^17.2.3",
+    "firebase-admin": "^14.1.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }

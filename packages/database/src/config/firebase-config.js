@@ -1,4 +1,6 @@
-import admin from 'firebase-admin';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -19,8 +21,8 @@ if (!serviceAccountJsonString) {
 const serviceAccount = JSON.parse(serviceAccountJsonString); 
 
 // 4. Initialize the Firebase Admin SDK
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+const app = initializeApp({
+  credential: cert(serviceAccount),
   // Optional: If you plan to use Realtime Database or Cloud Storage
   // with the Admin SDK, you might need to specify these too.
   // Replace YOUR_PROJECT_ID with your actual project ID if you include these.
@@ -29,7 +31,7 @@ admin.initializeApp({
 });
 
 // Get the Firestore instance
-const db = admin.firestore();
-const auth = admin.auth();
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-export { db, auth, admin };
+export { db, auth };
