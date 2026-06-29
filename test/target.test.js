@@ -1,33 +1,30 @@
-import {
-  fetchGreenhouse,
-  fetchLever,
-  fetchWorkday,
-} from '@repo/scraper';
+import { fetchBoard } from '@repo/scraper';
 
 const cases = [
   {
     name: 'Greenhouse',
-    fn: fetchGreenhouse,
     url: 'https://boards.greenhouse.io/stripe',
   },
   {
     name: 'Lever',
-    fn: fetchLever,
     url: 'https://jobs.lever.co/mistral',
   },
   {
     name: 'Workday',
-    fn: fetchWorkday,
     url: 'https://ea.wd3.myworkdayjobs.com/en-US/Careers',
+  },
+  {
+    name: 'Ashby',
+    url: 'https://jobs.ashbyhq.com/ramp',
   },
 ];
 
 async function runTargets() {
-  for (const { name, fn, url } of cases) {
+  for (const { name, url } of cases) {
     console.log(`\n=== ${name} ===`);
     console.log(`URL: ${url}`);
     try {
-      const jobs = await fn(url);
+      const jobs = await fetchBoard(url);
       console.log(`Found ${jobs.length} postings`);
       console.log('Sample:', JSON.stringify(jobs[0], null, 2));
     } catch (error) {

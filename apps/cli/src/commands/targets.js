@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { select, Separator } from '@inquirer/prompts';
-import { fetchGreenhouse, fetchLever, fetchWorkday, fetchAshby } from '@repo/scraper';
+import { fetchBoard } from '@repo/scraper';
 import { Logger } from '@repo/shared';
 import { TARGETS, KEYWORDS, LOCATIONS } from '../constants.js';
 
@@ -18,15 +18,6 @@ function matchesLocation(location) {
   if (!LOCATION_RE) return true;
   if (!location) return false;
   return LOCATION_RE.test(location.toLowerCase());
-}
-
-function fetcherFor(url) {
-  const host = new URL(url).host;
-  if (host.includes('greenhouse.io')) return fetchGreenhouse;
-  if (host.includes('lever.co')) return fetchLever;
-  if (host.includes('myworkdayjobs.com')) return fetchWorkday;
-  if (host.includes('ashbyhq.com')) return fetchAshby;
-  return null;
 }
 
 function openInBrowser(url) {
@@ -62,15 +53,8 @@ export function registerTargetsCommand(program) {
 
         for (const url of TARGETS) {
           const label = targetLabel(url);
-          const fetcher = fetcherFor(url);
-          if (!fetcher) {
-            if (!options.json) {
-              console.log(`  ${paint('✗', c.red)} ${paint(label, c.bright)} ${paint('no fetcher', c.gray)}`);
-            }
-            continue;
-          }
           try {
-            const jobs = (await fetcher(url)).filter(
+            const jobs = (await fetchBoard(url)).filter(
               (job) => matchesKeywords(job.title) && matchesLocation(job.location)
             );
             allJobs.push(...jobs);
