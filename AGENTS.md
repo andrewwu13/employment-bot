@@ -131,16 +131,13 @@ npm link --workspace=apps/cli  # Creates `emp` command globally
 # Scrape a single URL
 emp url "https://company.com/jobs/123"
 
-# Output raw JSON with custom timeout
-emp url "https://company.com/jobs/123" --json --timeout 60000
-
 # List job postings from unread Gmail emails (read-only, no mark as read)
 emp emails
 emp emails --limit 3
 
 # List AND scrape each job URL from emails
 emp emails --scrape
-emp emails --limit 2 --scrape --json
+emp emails --limit 2 --scrape
 ```
 
 ## Git Workflow

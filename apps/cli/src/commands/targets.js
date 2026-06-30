@@ -38,18 +38,15 @@ export function registerTargetsCommand(program) {
   program
     .command('targets')
     .description('Scrape target companies for intern roles')
-    .option('-j, --json', 'output raw JSON', false)
-    .action(async (options) => {
+    .action(async () => {
       try {
         const start = performance.now();
         const allJobs = [];
 
-        if (!options.json) {
-          console.log(
-            paint(`\n  Intern role search`, c.bright, c.cyan) +
-              paint(`  ·  ${TARGETS.length} target companies\n`, c.gray)
-          );
-        }
+        console.log(
+          paint(`\n  Intern role search`, c.bright, c.cyan) +
+            paint(`  ·  ${TARGETS.length} target companies\n`, c.gray)
+        );
 
         for (const url of TARGETS) {
           const label = targetLabel(url);
@@ -58,23 +55,14 @@ export function registerTargetsCommand(program) {
               (job) => matchesKeywords(job.title) && matchesLocation(job.location)
             );
             allJobs.push(...jobs);
-            if (!options.json) {
-              const count = paint(`${jobs.length} role${jobs.length === 1 ? '' : 's'}`, c.green);
-              console.log(`  ${paint('✓', c.green)} ${paint(label, c.bright)} ${paint('·', c.gray)} ${count}`);
-            }
+            const count = paint(`${jobs.length} role${jobs.length === 1 ? '' : 's'}`, c.green);
+            console.log(`  ${paint('✓', c.green)} ${paint(label, c.bright)} ${paint('·', c.gray)} ${count}`);
           } catch (error) {
-            if (!options.json) {
-              console.log(`  ${paint('✗', c.red)} ${paint(label, c.bright)} ${paint(error.message, c.gray)}`);
-            }
+            console.log(`  ${paint('✗', c.red)} ${paint(label, c.bright)} ${paint(error.message, c.gray)}`);
           }
         }
 
         const elapsed = ((performance.now() - start) / 1000).toFixed(2);
-
-        if (options.json) {
-          console.log(JSON.stringify(allJobs, null, 2));
-          process.exit(0);
-        }
 
         if (allJobs.length === 0) {
           console.log(paint(`\n  No intern roles found. `, c.yellow) + paint(`(${elapsed}s)\n`, c.gray));

@@ -110,8 +110,7 @@ employment-bot/
 │   ├── ai/               # AI utilities
 │   ├── database/         # Firestore service
 │   ├── email/            # Gmail OAuth and API
-│   ├── job-pipeline/     # Scrape orchestration
-│   ├── scraper/          # Playwright-based scraping
+│   ├── scraper/          # Job board + posting scraping
 │   └── shared/           # Logger, models, constants
 ├── .env
 ├── compose.yaml
@@ -127,7 +126,7 @@ Test scraper and email fetching without database writes:
 npm link --workspace=apps/cli
 
 # Scrape a URL
-emp url "https://company.com/jobs/123" --json
+emp url "https://company.com/jobs/123"
 
 # Check emails
 emp emails --scrape --limit 3

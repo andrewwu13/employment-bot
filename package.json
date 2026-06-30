@@ -28,7 +28,6 @@
     "packages/ai",
     "packages/database",
     "packages/email",
-    "packages/job-pipeline",
     "apps/*"
   ]
 }

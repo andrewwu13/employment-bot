@@ -30,20 +30,8 @@ Requires `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET` to be set in `.env` first. 
 Scrape a single job posting URL and display the extracted data.
 
 ```bash
-# Basic usage
 emp url "https://company.com/jobs/123"
-
-# Output raw JSON
-emp url "https://company.com/jobs/123" --json
-
-# Custom timeout (60 seconds)
-emp url "https://company.com/jobs/123" --timeout 60000
 ```
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-j, --json` | Output raw JSON | `false` |
-| `-t, --timeout <ms>` | Page load timeout | `30000` |
 
 ### `emp emails`
 
@@ -60,15 +48,13 @@ emp emails --limit 3
 emp emails --scrape
 
 # Combine options
-emp emails --limit 2 --scrape --json
+emp emails --limit 2 --scrape
 ```
 
 | Option | Description | Default |
 |--------|-------------|---------|
 | `-l, --limit <count>` | Max emails to fetch | `5` |
 | `-s, --scrape` | Scrape each job URL after listing | `false` |
-| `-j, --json` | Output raw JSON | `false` |
-| `-t, --timeout <ms>` | Scrape timeout | `30000` |
 
 ## Project Structure
 

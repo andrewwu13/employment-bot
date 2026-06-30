@@ -3,8 +3,7 @@ import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { REST, Routes } from 'discord.js';
 import { DatabaseService } from '@repo/database';
 import { GmailService } from '@repo/email';
-import { ScrapeService } from '@repo/job-pipeline';
-import { JobScraper } from '@repo/scraper';
+import { fetchPosting } from '@repo/scraper';
 import { Logger } from '@repo/shared';
 import { createJobEmbedFromDB } from './embed.js';
 
@@ -14,7 +13,6 @@ const cooldown = parseInt(process.env.SCRAPE_COOLDOWN_MS, 10) || DEFAULT_SCRAPE_
 
 const gmailService = new GmailService();
 const dbService = new DatabaseService();
-const jobScraper = new JobScraper();
 
 const commands = [
   {
@@ -99,7 +97,7 @@ async function runPipelineAndPost() {
       try {
         // Step 1: Scrape the job
         Logger.info(`[DiscordBot] Scraping: ${job.applyLink}`);
-        const scrapedData = await jobScraper.scrape(job.applyLink);
+        const scrapedData = await fetchPosting(job.applyLink);
 
         // Step 2: Save to DB
         const enrichedJob = {

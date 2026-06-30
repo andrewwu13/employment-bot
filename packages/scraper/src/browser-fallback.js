@@ -9,7 +9,6 @@ export class JobScraper {
     this.headless = options.headless ?? true;
   }
 
-  // Detect which site handler to use based on URL
   detectSiteHandler(url) {
     for (const [name, handler] of Object.entries(SITE_HANDLERS)) {
       if (name !== 'generic' && handler.pattern.test(url)) {
@@ -21,7 +20,6 @@ export class JobScraper {
     return { name: 'generic', ...SITE_HANDLERS.generic };
   }
 
-  // Try to dismiss cookie consent banners
   async dismissCookieBanners(page) {
     for (const selector of COOKIE_DISMISS_SELECTORS) {
       try {
@@ -29,11 +27,10 @@ export class JobScraper {
         if (button) {
           await button.click();
           Logger.info(`[JobScraper] Dismissed cookie banner using: ${selector}`);
-          await page.waitForTimeout(500); // Wait for banner to disappear
+          await page.waitForTimeout(500);
           return true;
         }
       } catch (e) {
-        // Selector not found or click failed, try next
       }
     }
     return false;
@@ -48,7 +45,6 @@ export class JobScraper {
 
     const page = await context.newPage();
 
-    // Block non-essential resources to speed up page loads
     await page.route('**/*', (route) => {
       const type = route.request().resourceType();
       if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
@@ -60,22 +56,18 @@ export class JobScraper {
     try {
       Logger.info(`[JobScraper] Navigating to ${url}...`);
 
-      // Navigate to page
       await page.goto(url, {
         waitUntil: 'domcontentloaded',
         timeout: this.timeout
       });
 
-      // Log the final URL after redirects
       const finalUrl = page.url();
       if (finalUrl !== url) {
         Logger.info(`[JobScraper] Redirected to: ${finalUrl}`);
       }
 
-      // Detect site type from final URL
       const handler = this.detectSiteHandler(finalUrl);
 
-      // Wait for site-specific content if defined
       if (handler.waitFor) {
         try {
           await page.waitForSelector(handler.waitFor, { timeout: 5000 });
@@ -116,17 +108,14 @@ export class JobScraper {
     });
   }
 
-  // Extract data using JSON-LD if available, otherwise fall back to HTML parsing
   async extractData(pageHTML, url) {
     const $ = cheerio.load(pageHTML);
 
-    // Try JSON-LD first
     const jsonLdScript = $('script[type="application/ld+json"]').html();
     if (jsonLdScript) {
       try {
         let JSONData = JSON.parse(jsonLdScript);
 
-        // Some pages embed an array of JSON-LD objects
         if (Array.isArray(JSONData)) {
           JSONData = JSONData.find(item => item['@type'] === 'JobPosting') || JSONData[0];
         }
@@ -147,29 +136,23 @@ export class JobScraper {
       }
     }
 
-    // Fallback: extract from HTML elements
     Logger.info('[JobScraper] Extracting data from HTML (no JSON-LD found)');
 
-    // Title: try <title>, <h1>, or og:title
     const rawTitle = $('title').text().trim()
       || $('h1').first().text().trim()
       || $('meta[property="og:title"]').attr('content')
       || '';
 
-    // Company: try og:site_name, or parse from title (often "Job Title - Company")
     const company = $('meta[property="og:site_name"]').attr('content')
       || this.parseCompanyFromTitle(rawTitle)
       || null;
 
-    // Clean the title by removing the company name and job ID suffixes
     const title = this.cleanTitle(rawTitle, company);
 
-    // Location: try meta tags or common selectors
     const location = $('meta[name="geo.placename"]').attr('content')
       || $('meta[property="og:locale"]').attr('content')
       || null;
 
-    // Description: grab body text for skills extraction
     const bodyText = $('body').text();
 
     return {
@@ -182,7 +165,6 @@ export class JobScraper {
     };
   }
 
-  // Parse company name from title tag (e.g., "Software Engineer - 210946 - Electronic Arts")
   parseCompanyFromTitle(title) {
     const parts = title.split(/\s[-–|]\s/);
     if (parts.length >= 2) {
@@ -191,20 +173,16 @@ export class JobScraper {
     return null;
   }
 
-  // Clean title by removing company name and numeric job IDs
   cleanTitle(rawTitle, company) {
     let title = rawTitle;
-    // Remove company name from end
     if (company) {
       const companyPattern = new RegExp(`\\s*[-–|]\\s*${company.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i');
       title = title.replace(companyPattern, '');
     }
-    // Remove numeric job IDs (e.g., "- 210946")
     title = title.replace(/\s*[-–|]\s*\d{4,}\s*/g, '');
     return title.trim();
   }
 
-  // Detect if text looks like cookie consent content
   looksLikeCookieContent(text) {
     if (!text) return false;
     const lowerText = text.toLowerCase();
@@ -231,7 +209,6 @@ export class JobScraper {
 
     const skills = new Set();
 
-    // Create one big regex pattern
     const pattern = new RegExp(`\\b(${allSkills.join('|')})\\b`, 'gi');
 
     const matches = description.match(pattern);

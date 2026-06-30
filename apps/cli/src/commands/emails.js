@@ -1,5 +1,5 @@
 import { GmailService } from '@repo/email';
-import { JobScraper } from '@repo/scraper';
+import { fetchPosting } from '@repo/scraper';
 import { Logger } from '@repo/shared';
 
 export function registerEmailsCommand(program) {
@@ -8,12 +8,9 @@ export function registerEmailsCommand(program) {
     .description('List job postings from unread Gmail emails (read-only)')
     .option('-l, --limit <count>', 'max number of emails to fetch', '5')
     .option('-s, --scrape', 'scrape each job URL after listing', false)
-    .option('-j, --json', 'output raw JSON', false)
-    .option('-t, --timeout <ms>', 'scrape timeout in milliseconds', '30000')
     .action(async (options) => {
       const limit = parseInt(options.limit, 10);
       const shouldScrape = options.scrape;
-      const timeout = parseInt(options.timeout, 10);
 
       console.log(`Fetching up to ${limit} unread emails (read-only)...`);
       console.log('');
@@ -52,17 +49,12 @@ export function registerEmailsCommand(program) {
         // Optionally scrape each job URL
         if (shouldScrape && allJobs.length > 0) {
           console.log(`\nScraping ${allJobs.length} job URL(s)...\n`);
-          const scraper = new JobScraper({ timeout });
 
           for (let i = 0; i < allJobs.length; i++) {
             const job = allJobs[i];
             try {
-              const jobData = await scraper.scrape(job.applyLink);
-              if (options.json) {
-                console.log(JSON.stringify(jobData, null, 2));
-              } else {
-                Logger.logJob(jobData);
-              }
+              const jobData = await fetchPosting(job.applyLink);
+              Logger.logJob(jobData);
             } catch (error) {
               Logger.error(`Failed to scrape ${job.companyName} - ${job.jobTitle}`, error);
             }
