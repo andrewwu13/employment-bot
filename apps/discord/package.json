@@ -11,11 +11,9 @@
   },
   "dependencies": {
     "discord.js": "^14.24.2",
-    "dotenv": "^17.2.3",
     "node-cron": "^4.2.1",
     "@repo/database": "*",
     "@repo/email": "*",
-    "@repo/job-pipeline": "*",
     "@repo/scraper": "*",
     "@repo/shared": "*"
   },

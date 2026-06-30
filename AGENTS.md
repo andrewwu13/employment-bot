@@ -62,6 +62,8 @@ These commands can destroy other agents' work:
 
 ## Dependencies
 
+- Declare each third-party dependency in the `package.json` of the workspace package or app that imports it, not in the root manifest. The root manifest is reserved for repo-wide tooling (test runner, linter, nodemon, TypeScript).
+- Reference other workspace packages by their `@repo/*` name with version `*`; never import across packages by relative path (`../../packages/...`).
 - Keep `package-lock.json` committed
 - Pin dependency versions explicitly
 - Run `npm audit` before major releases
@@ -120,25 +122,22 @@ A testing tool for scraping and email inspection. No database writes.
 
 ```bash
 npm install
-npm link --workspace=apps/cli  # Creates `employ-cli` command globally
+npm link --workspace=apps/cli  # Creates `emp` command globally
 ```
 
 ### Commands
 
 ```bash
 # Scrape a single URL
-employ-cli url "https://company.com/jobs/123"
-
-# Output raw JSON with custom timeout
-employ-cli url "https://company.com/jobs/123" --json --timeout 60000
+emp url "https://company.com/jobs/123"
 
 # List job postings from unread Gmail emails (read-only, no mark as read)
-employ-cli emails
-employ-cli emails --limit 3
+emp emails
+emp emails --limit 3
 
 # List AND scrape each job URL from emails
-employ-cli emails --scrape
-employ-cli emails --limit 2 --scrape --json
+emp emails --scrape
+emp emails --limit 2 --scrape
 ```
 
 ## Git Workflow

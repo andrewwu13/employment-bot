@@ -1,5 +1,5 @@
 import { GmailService } from '@repo/email';
-import { JobScraper } from '@repo/scraper';
+import { fetchPosting } from '@repo/scraper';
 import { Logger } from '@repo/shared';
 
 // Format a scraped job as a Discord-style embed (text representation)
@@ -41,11 +41,8 @@ export function registerLogCommand(program) {
     .command('log')
     .description('Simulate the full pipeline: fetch emails, scrape jobs, display as embeds (no DB, no mark as read)')
     .option('-l, --limit <count>', 'max number of emails to fetch', '5')
-    .option('-t, --timeout <ms>', 'scrape timeout in milliseconds', '30000')
-    .option('-j, --json', 'output raw JSON', false)
     .action(async (options) => {
       const limit = parseInt(options.limit, 10);
-      const timeout = parseInt(options.timeout, 10);
 
       console.log(`Simulating pipeline (read-only, no DB writes)...`);
       console.log(`Fetching up to ${limit} emails\n`);
@@ -78,7 +75,6 @@ export function registerLogCommand(program) {
         console.log('');
 
         // Step 3: Scrape each job URL
-        const scraper = new JobScraper({ timeout });
         let success = 0;
         let failed = 0;
 
@@ -87,13 +83,8 @@ export function registerLogCommand(program) {
           Logger.info(`[${i + 1}/${allJobs.length}] Scraping ${job.companyName} - ${job.jobTitle}`);
 
           try {
-            const jobData = await scraper.scrape(job.applyLink);
-
-            if (options.json) {
-              console.log(JSON.stringify(jobData, null, 2));
-            } else {
-              console.log(formatAsEmbed(jobData));
-            }
+            const jobData = await fetchPosting(job.applyLink);
+            console.log(formatAsEmbed(jobData));
             success++;
           } catch (error) {
             Logger.error(`Failed to scrape: ${error.message}`);

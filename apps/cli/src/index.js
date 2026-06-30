@@ -6,11 +6,12 @@ import { registerUrlCommand } from './commands/url.js';
 import { registerEmailsCommand } from './commands/emails.js';
 import { registerAuthCommand } from './commands/auth.js';
 import { registerLogCommand } from './commands/log.js';
+import { registerTargetsCommand } from './commands/targets.js';
 
 const program = new Command();
 
 program
-  .name('employ-cli')
+  .name('emp')
   .description('CLI tool for testing job scraper')
   .version('1.0.0');
 
@@ -18,5 +19,6 @@ registerUrlCommand(program);
 registerEmailsCommand(program);
 registerAuthCommand(program);
 registerLogCommand(program);
+registerTargetsCommand(program);
 
 program.parse();

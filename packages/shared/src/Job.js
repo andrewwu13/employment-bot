@@ -4,7 +4,7 @@ export class Job {
   // job is instantiated with an object with the following properties; keep in mind the curly braces around the construtor.
   // job is instantiated with an object that might be flat or have nested scrapedData
   constructor(data) {
-    // Handle nested scrapedData if present (from ScrapeService)
+    // Handle nested scrapedData if present (from the scrape pipeline)
     const sourceData = data.scrapedData || data;
 
     // Core job data (prefer scraped data, fallback to initial data)
