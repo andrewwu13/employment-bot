@@ -3,6 +3,28 @@ import * as cheerio from 'cheerio';
 import { Logger } from '@repo/shared';
 import { SITE_HANDLERS, COOKIE_DISMISS_SELECTORS, allSkills } from '@repo/shared';
 
+let sharedBrowser = null;
+let browserPromise = null;
+
+async function getBrowser(headless = true) {
+  if (sharedBrowser?.isConnected()) return sharedBrowser;
+  if (!browserPromise) {
+    browserPromise = chromium.launch({ headless }).then((browser) => {
+      sharedBrowser = browser;
+      browserPromise = null;
+      return browser;
+    });
+  }
+  return browserPromise;
+}
+
+export async function closeBrowser() {
+  if (sharedBrowser) {
+    await sharedBrowser.close();
+    sharedBrowser = null;
+  }
+}
+
 export class JobScraper {
   constructor(options = {}) {
     this.timeout = options.timeout ?? 30000;
@@ -37,7 +59,7 @@ export class JobScraper {
   }
 
   async scrape(url) {
-    const browser = await chromium.launch({ headless: this.headless });
+    const browser = await getBrowser(this.headless);
 
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -85,7 +107,7 @@ export class JobScraper {
       console.error('[JobScraper] Error during scraping:', error.message);
       throw error;
     } finally {
-      await browser.close();
+      await context.close();
     }
   }
 

@@ -31,6 +31,12 @@ meta tags). No intern filtering - it returns whatever posting the URL points at.
 const job = await fetchPosting('https://jobs.lever.co/mistral/<id>');
 ```
 
+### `closeBrowser()` → `Promise<void>`
+
+The browser fallback lazily launches a single headless browser and reuses it across
+calls. Long-running processes (e.g. the Discord bot) should call `closeBrowser()` on
+shutdown to release it. Short-lived scripts that exit don't need to.
+
 ## The `Job` shape
 
 Every result - from any ATS or the browser fallback - has the same shape:
@@ -78,6 +84,6 @@ Drop `fetchPosting`/`isPosting` to leave single postings to the browser fallback
 src/
   index.js              # entry point: fetchBoard, fetchPosting + redirect routing
   providers.js          # ATS providers + PROVIDERS registry
-  helpers.js            # shared helpers (unified Job, skills, fetchJson)
+  utils.js              # shared utils (unified Job, skills, fetchJson)
   browser-fallback.js   # internal Playwright scraper (not exported)
 ```
