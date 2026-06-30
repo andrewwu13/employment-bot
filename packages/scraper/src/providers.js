@@ -1,5 +1,5 @@
 import { Logger } from '@repo/shared';
-import { htmlToText, isInternRole, toUnifiedJob, fetchJson, pathSegments } from './helpers.js';
+import { htmlToText, isInternRole, toUnifiedJob, fetchJson, pathSegments } from './utils.js';
 
 const greenhouse = {
   match: 'greenhouse.io',

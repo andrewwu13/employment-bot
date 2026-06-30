@@ -34,6 +34,20 @@ function targetLabel(url) {
   return new URL(url).pathname.split('/').filter(Boolean).pop() ?? new URL(url).host;
 }
 
+const CONCURRENCY = 8;
+
+async function mapWithConcurrency(items, limit, task) {
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      await task(items[i], i);
+    }
+  }
+  const workers = Array.from({ length: Math.min(limit, items.length) }, worker);
+  await Promise.all(workers);
+}
+
 export function registerTargetsCommand(program) {
   program
     .command('targets')
@@ -48,7 +62,7 @@ export function registerTargetsCommand(program) {
             paint(`  ·  ${TARGETS.length} target companies\n`, c.gray)
         );
 
-        for (const url of TARGETS) {
+        await mapWithConcurrency(TARGETS, CONCURRENCY, async (url) => {
           const label = targetLabel(url);
           try {
             const jobs = (await fetchBoard(url)).filter(
@@ -60,7 +74,7 @@ export function registerTargetsCommand(program) {
           } catch (error) {
             console.log(`  ${paint('✗', c.red)} ${paint(label, c.bright)} ${paint(error.message, c.gray)}`);
           }
-        }
+        });
 
         const elapsed = ((performance.now() - start) / 1000).toFixed(2);
 
