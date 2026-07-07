@@ -42,6 +42,7 @@ export class JobScraper {
     return { name: 'generic', ...SITE_HANDLERS.generic };
   }
 
+  // Unused — not called from scrape()
   async dismissCookieBanners(page) {
     for (const selector of COOKIE_DISMISS_SELECTORS) {
       try {
@@ -111,6 +112,7 @@ export class JobScraper {
     }
   }
 
+  // Unused — not called from scrape()
   async autoscroll(page) {
     await page.evaluate(async () => {
       await new Promise((resolve) => {
@@ -205,6 +207,7 @@ export class JobScraper {
     return title.trim();
   }
 
+  // Unused — not called from scrape()
   looksLikeCookieContent(text) {
     if (!text) return false;
     const lowerText = text.toLowerCase();

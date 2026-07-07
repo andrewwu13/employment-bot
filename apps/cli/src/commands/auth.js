@@ -22,6 +22,7 @@ function findProjectRoot() {
   return process.cwd();
 }
 
+// Unused — no command flow currently calls this
 function prompt(question) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   return new Promise((resolve) => {

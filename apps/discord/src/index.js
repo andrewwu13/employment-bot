@@ -246,4 +246,4 @@ async function shutdown(signal) {
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-client.login(process.env.TOKEN);
+client.login(process.env.DISCORD_BOT_TOKEN);

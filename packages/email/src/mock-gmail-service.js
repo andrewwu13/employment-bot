@@ -10,6 +10,7 @@ const __dirname = dirname(__filename);
  * Mock Gmail service for development/testing
  * Returns fixture data instead of making real API calls
  */
+// Unused — not wired into the Discord bot, CLI, or tests
 export class MockGmailService {
     constructor(options = {}) {
         this.fixtureFile = options.fixtureFile || join(__dirname, '../fixtures/sample-emails.json');
@@ -52,6 +53,7 @@ export class MockGmailService {
         } catch (error) {
             if (error.code === 'ENOENT') {
                 Logger.warn(`[MockGmailService] Fixture file not found: ${this.fixtureFile}`);
+                // Stale pre-refactor path — fixtures actually live at packages/shared/src/fixtures/
                 Logger.info(`[MockGmailService] Create fixtures at: backend/fixtures/sample-emails.json`);
                 return [];
             }
