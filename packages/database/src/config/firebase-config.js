@@ -34,4 +34,5 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// `auth` is unused — no code currently imports it
 export { db, auth };

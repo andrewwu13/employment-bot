@@ -88,10 +88,9 @@ The bot supports the following slash commands for manual interaction:
 ```
 apps/discord/
 ├── src/
-│   ├── index.js              # Main bot entry point and cron setup
-│   ├── embed.js              # Discord embed creation utilities
-│   ├── commands.js           # Command definitions (legacy, see index.js)
-│   └── test-db-connection.js # Database connection test script
+│   ├── index.js       # Main bot entry point and cron setup
+│   ├── embed.js       # Discord embed creation utilities
+│   └── commands.js    # Command definitions (legacy, see index.js)
 ├── package.json
 └── README.md
 ```

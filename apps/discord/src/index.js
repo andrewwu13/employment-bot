@@ -31,7 +31,7 @@ const commands = [
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
 try {
   Logger.info('Started refreshing application (/) commands.');
 
@@ -53,7 +53,7 @@ client.once(Events.ClientReady, (c) => {
     runPipelineAndPost();
   }
 
-  cron.schedule("0 */20 * * *", runPipelineAndPost, {
+  cron.schedule("*/20 * * * *", runPipelineAndPost, {
     timezone: "America/Toronto"
   });
 });
@@ -246,4 +246,4 @@ async function shutdown(signal) {
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-client.login(process.env.TOKEN);
+client.login(process.env.DISCORD_BOT_TOKEN);
