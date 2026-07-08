@@ -1,6 +1,7 @@
 // Run this file with `node test/database.test.js`
 
-import { databaseService } from '@repo/database'; 
+// BROKEN: @repo/database exports the class `DatabaseService`, not an instance `databaseService`
+import { databaseService } from '@repo/database';
 
 async function testDatabase() {
   try {

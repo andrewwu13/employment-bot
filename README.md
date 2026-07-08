@@ -138,7 +138,6 @@ emp emails --scrape --limit 3
 |--------|-------------|
 | `npm run discord` | Run Discord bot (production) |
 | `npm run discord:dev` | Run with hot reload |
-| `npm run cli` | Run CLI tool |
 | `npm test` | Run test suite |
 | `npm run test:watch` | Tests in watch mode |
 | `npm run test:coverage` | Tests with coverage |

@@ -56,15 +56,42 @@ emp emails --limit 2 --scrape
 | `-l, --limit <count>` | Max emails to fetch | `5` |
 | `-s, --scrape` | Scrape each job URL after listing | `false` |
 
+### `emp log`
+
+Simulates the full pipeline end-to-end (fetch emails, scrape each job URL, print as
+Discord-style embeds) with no database writes and no marking emails as read.
+
+```bash
+emp log
+emp log --limit 3
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-l, --limit <count>` | Max emails to fetch | `5` |
+
+### `emp targets`
+
+Scrapes the target company boards defined in `src/constants.js` (`TARGETS`) for intern
+roles, filtered by `KEYWORDS` and `LOCATIONS`, then lets you pick a result to open in
+your browser.
+
+```bash
+emp targets
+```
+
 ## Project Structure
 
 ```
 apps/cli/
 ├── src/
 │   ├── index.js              # Entry point, registers commands
+│   ├── constants.js          # Target company boards, keyword/location filters
 │   └── commands/
 │       ├── auth.js           # Gmail OAuth2 flow
 │       ├── emails.js         # Email listing and scraping
+│       ├── log.js            # Full pipeline simulation (no DB writes)
+│       ├── targets.js        # Scrape target company boards for intern roles
 │       └── url.js            # Single URL scraping
 └── package.json
 ```
