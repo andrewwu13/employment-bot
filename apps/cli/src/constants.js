@@ -63,6 +63,51 @@ export const TARGETS = [
   'https://jobs.ashbyhq.com/deel',
   'https://jobs.lever.co/wealthfront',
   'https://jobs.lever.co/kraken',
+
+  // Startups - San Francisco
+  'https://boards.greenhouse.io/gusto',
+  'https://boards.greenhouse.io/airtable',
+  'https://boards.greenhouse.io/faire',
+  'https://boards.greenhouse.io/amplitude',
+  'https://boards.greenhouse.io/webflow',
+  'https://boards.greenhouse.io/vercel',
+  'https://jobs.ashbyhq.com/benchling',
+  'https://jobs.ashbyhq.com/verkada',
+
+  // Startups - New York
+  'https://boards.greenhouse.io/attentive',
+  'https://boards.greenhouse.io/cockroachlabs',
+  'https://boards.greenhouse.io/squarespace',
+  'https://boards.greenhouse.io/mongodb',
+  'https://boards.greenhouse.io/braze',
+  'https://boards.greenhouse.io/justworks',
+  'https://boards.greenhouse.io/oscar',
+  'https://boards.greenhouse.io/yext',
+  'https://boards.greenhouse.io/movableink',
+
+  // Startups - Toronto
+  'https://boards.greenhouse.io/flipp',
+  'https://boards.greenhouse.io/ritual',
+  'https://jobs.ashbyhq.com/1password',
+  'https://jobs.ashbyhq.com/clearco',
+  'https://jobs.ashbyhq.com/float',
+  'https://jobs.ashbyhq.com/koho',
+  'https://jobs.ashbyhq.com/jobber',
+
+  // Storage / data infra / HPC (deep-systems, C++/Rust)
+  'https://boards.greenhouse.io/purestorage',
+  'https://boards.greenhouse.io/rubrik',
+  'https://boards.greenhouse.io/druva',
+  'https://boards.greenhouse.io/minio',
+  'https://boards.greenhouse.io/clickhouse',
+  'https://boards.greenhouse.io/singlestore',
+  'https://boards.greenhouse.io/yugabyte',
+  'https://boards.greenhouse.io/planetscale',
+  'https://boards.greenhouse.io/lightmatter',
+  'https://jobs.ashbyhq.com/neon',
+  'https://jobs.ashbyhq.com/modal',
+  'https://jobs.ashbyhq.com/anyscale',
+  'https://jobs.ashbyhq.com/cerebras',
 ];
 
 // Only keep roles whose title contains one of these keywords. Empty = keep all.

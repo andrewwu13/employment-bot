@@ -145,22 +145,25 @@ const workday = {
     Logger.info(`[scraper] Workday CXS API: ${apiUrl}`);
 
     const limit = 20;
-    let offset = 0;
-    let total = Infinity;
-    const jobs = [];
-
-    while (offset < total) {
-      const data = await fetchJson(apiUrl, {
+    const fetchPage = (offset) =>
+      fetchJson(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ limit, offset, searchText: '', appliedFacets: {} }),
       });
 
-      total = data.total ?? 0;
-      const postings = data.jobPostings ?? [];
-      if (postings.length === 0) break;
+    const first = await fetchPage(0);
+    const total = first.total ?? 0;
 
-      for (const p of postings) {
+    const rest = await Promise.all(
+      Array.from({ length: Math.max(0, Math.ceil(total / limit) - 1) }, (_, i) =>
+        fetchPage((i + 1) * limit)
+      )
+    );
+
+    const jobs = [];
+    for (const data of [first, ...rest]) {
+      for (const p of data.jobPostings ?? []) {
         if (!isInternRole(p.title)) continue;
         jobs.push(
           toUnifiedJob({
@@ -173,8 +176,6 @@ const workday = {
           })
         );
       }
-
-      offset += limit;
     }
 
     return jobs;
