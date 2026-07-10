@@ -25,6 +25,15 @@ export class Job {
     // Email context (if available)
     this.emailSubject = data.emailSubject || '';
     this.emailDate = data.emailDate || '';
+
+    // Classification (null = unclassified -> will post in tmp channel)
+    // TODO: set up general channel where all postings will be posted for testing + monitoring
+    this.industry = sourceData.industry || data.industry || null;
+    this.country = sourceData.country || data.country || null;
+    this.remote = sourceData.remote ?? data.remote ?? false;
+
+    this.discordMessageId = data.discordMessageId || null;
+    this.channelId = data.channelId || null;
   }
 
   // convert to a plain object to add to DB
@@ -36,6 +45,15 @@ export class Job {
       location: this.location,
       skills: this.skills,
       postedDate: this.postedDate,
+
+      // Classification
+      industry: this.industry,
+      country: this.country,
+      remote: this.remote,
+
+      // Discord
+      discordMessageId: this.discordMessageId,
+      channelId: this.channelId,
 
       // Metadata
       status: this.status,
