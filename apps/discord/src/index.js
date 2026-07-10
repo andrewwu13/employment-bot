@@ -4,7 +4,7 @@ import { REST, Routes } from 'discord.js';
 import { DatabaseService } from '@repo/database';
 import { GmailService } from '@repo/email';
 import { fetchPosting, closeBrowser } from '@repo/scraper';
-import { Logger } from '@repo/shared';
+import { classifyJob, Logger } from '@repo/shared';
 import { createJobEmbedFromDB } from './embed.js';
 
 const DEFAULT_SCRAPE_COOLDOWN = 1000;
@@ -89,6 +89,12 @@ async function runPipelineAndPost() {
         Logger.info(`[DiscordBot] Scraping: ${job.applyLink}`);
         const scrapedData = await fetchPosting(job.applyLink);
 
+        const { industry, country, remote, skillRoles } = classifyJob({
+          title: job.jobTitle,
+          skills: scrapedData.skills,
+          location: scrapedData.location
+        });
+
         const enrichedJob = {
           ...job,
           scrapedData,
@@ -99,7 +105,10 @@ async function runPipelineAndPost() {
           company: job.companyName,
           location: scrapedData.location,
           skills: scrapedData.skills,
-          url: job.applyLink
+          url: job.applyLink,
+          industry,
+          country,
+          remote,
         };
         const docId = await dbService.write(enrichedJob);
         Logger.info(`[DiscordBot] Saved to DB: ${docId}`);
