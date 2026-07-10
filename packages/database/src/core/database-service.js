@@ -95,13 +95,16 @@ export class DatabaseService {
   }
 
   // Mark job as posted
-  async markJobAsPosted(docId) {
+  async markJobAsPosted(docId, discordMessageId = null, channelId = null) {
     try {
-      await db.collection(this._getCollection()).doc(docId).update({
-        status: "posted",
+      const update = {
+        status: "posted", 
         postedAt: new Date()
-      });
+      };
+      if (discordMessageId) update.discordMessageId = discordMessageId;
+      if (channelId) update.channelId = channelId;
 
+      await db.collection(this._getCollection()).doc(docId).update(update)
       Logger.info("Document updated: ", docId);
       return docId;
     } catch (error) {

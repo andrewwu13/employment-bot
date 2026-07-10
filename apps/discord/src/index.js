@@ -114,9 +114,9 @@ async function runPipelineAndPost() {
         Logger.info(`[DiscordBot] Saved to DB: ${docId}`);
 
         const embed = createJobEmbedFromDB(enrichedJob);
-        await channel.send({ embeds: [embed] });
+        const sentMessage = await channel.send({ embeds: [embed] });
 
-        await dbService.markJobAsPosted(docId);
+        await dbService.markJobAsPosted(docId, sentMessage.id, channel.id);
         Logger.success(`[DiscordBot] ✓ Posted ${job.jobTitle} at ${job.companyName}`);
         successCount++;
 
