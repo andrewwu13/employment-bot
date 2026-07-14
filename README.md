@@ -20,11 +20,11 @@ Employment Bot monitors a Gmail inbox for job notification emails, extracts job 
 
 <pre>
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Gmail     │────▶│  Job Links  │────▶│   Scraper   │────▶│  Firestore  │────┐
+│   Gmail     │────▶│  Job Links  │───▶│   Scraper   │───▶│  Firestore  │────┐
 │   Emails    │     │  Extracted  │     │  (1-3 sec)  │     │  (pending)  │    │
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘    │
-                                                                                  │
-┌───────────────────────────────────────────────────────────────────────────────┘
+                                                                               │
+┌──────────────────────────────────────────────────────────────────────────────┘
 │
 ▼
 ┌─────────────┐     ┌─────────────┐
@@ -86,18 +86,18 @@ docker compose down            # Stop
 
 Create `.env` in the project root:
 
-| Variable | Description |
-|----------|-------------|
-| `DISCORD_BOT_TOKEN` | Discord bot authentication |
-| `APPLICATION_ID` | Discord application ID |
-| `GUILD_ID` | Discord server ID |
-| `JOB_CHANNEL_ID` | Target channel for job postings |
-| `GMAIL_CLIENT_ID` | Gmail OAuth client ID |
-| `GMAIL_CLIENT_SECRET` | Gmail OAuth client secret |
-| `GMAIL_REFRESH_TOKEN` | Gmail OAuth refresh token |
-| `FIREBASE_ADMIN_CONFIG` | Firebase service account JSON |
-| `SCRAPE_COOLDOWN_MS` | Delay between jobs (default: 1000ms) |
-| `RUN_ON_STARTUP` | Run pipeline on bot startup (default: true) |
+| Variable                  | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `DISCORD_BOT_TOKEN`     | Discord bot authentication                  |
+| `APPLICATION_ID`        | Discord application ID                      |
+| `GUILD_ID`              | Discord server ID                           |
+| `JOB_CHANNEL_ID`        | Target channel for job postings             |
+| `GMAIL_CLIENT_ID`       | Gmail OAuth client ID                       |
+| `GMAIL_CLIENT_SECRET`   | Gmail OAuth client secret                   |
+| `GMAIL_REFRESH_TOKEN`   | Gmail OAuth refresh token                   |
+| `FIREBASE_ADMIN_CONFIG` | Firebase service account JSON               |
+| `SCRAPE_COOLDOWN_MS`    | Delay between jobs (default: 1000ms)        |
+| `RUN_ON_STARTUP`        | Run pipeline on bot startup (default: true) |
 
 ## Project Structure
 
@@ -134,13 +134,13 @@ emp emails --scrape --limit 3
 
 ## Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run discord` | Run Discord bot (production) |
-| `npm run discord:dev` | Run with hot reload |
-| `npm test` | Run test suite |
-| `npm run test:watch` | Tests in watch mode |
-| `npm run test:coverage` | Tests with coverage |
+| Script                    | Description                  |
+| ------------------------- | ---------------------------- |
+| `npm run discord`       | Run Discord bot (production) |
+| `npm run discord:dev`   | Run with hot reload          |
+| `npm test`              | Run test suite               |
+| `npm run test:watch`    | Tests in watch mode          |
+| `npm run test:coverage` | Tests with coverage          |
 
 ## License
 
