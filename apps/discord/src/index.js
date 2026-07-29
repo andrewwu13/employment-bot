@@ -223,7 +223,7 @@ client.on(Events.InteractionCreate, async interaction => {
         }
       }
 
-      await interaction.editReply(`✅ Posted ${posted} job(s) to this channel!`);
+      await interaction.editReply(`Posted ${posted} job(s) to this channel!`);
     } catch (err) {
       Logger.error(err);
       await interaction.editReply("Failed to post jobs. Check logs.");
