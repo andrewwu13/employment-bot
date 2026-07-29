@@ -38,9 +38,7 @@ export function parseJobsFromEmails(rawEmails) {
   return allJobs;
 }
 
-// Sends a job embed and settles its status. Marks the job failed and rethrows
-// so the caller can count the failure without leaving it stuck in 'posting'.
-export async function publishJob(channel, job, dbService, docId = job.id) {
+export async function postJobToDiscord(channel, job, dbService, docId = job.id) {
   try {
     const embed = createJobEmbedFromDB(job);
     await channel.send({ embeds: [embed] });
@@ -98,7 +96,7 @@ export async function runPipelineAndPost(client, { gmailService, dbService }) {
         const docId = await dbService.write(enrichedJob);
         Logger.info(`[DiscordBot] Saved to DB: ${docId}`);
 
-        await publishJob(channel, enrichedJob, dbService, docId);
+        await postJobToDiscord(channel, enrichedJob, dbService, docId);
 
         Logger.success(`[DiscordBot] Posted ${job.jobTitle} at ${job.companyName}`);
         successCount++;
