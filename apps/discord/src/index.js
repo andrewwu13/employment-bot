@@ -5,7 +5,7 @@ import { GmailService } from '@repo/email';
 import { closeBrowser } from '@repo/scraper';
 import { Logger } from '@repo/shared';
 import { cronSchedule, cronTimezone, discordBotToken, runOnStartup } from './config.js';
-import { handleInteraction, registerCommands } from './commands/index.js';
+import { deployCommandsToDiscord, handleInteraction } from './commands/index.js';
 import { runPipelineAndPost } from './utils.js';
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
@@ -15,7 +15,7 @@ const services = {
   dbService: new DatabaseService()
 };
 
-await registerCommands();
+await deployCommandsToDiscord();
 
 client.once(Events.ClientReady, (c) => {
   Logger.success(`Ready! Logged in as ${c.user.tag}`);

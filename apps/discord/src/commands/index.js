@@ -8,7 +8,7 @@ import * as post from './post.js';
 const commands = [ping, jobs, post];
 const registry = new Map(commands.map(command => [command.name, command]));
 
-export async function registerCommands() {
+export async function deployCommandsToDiscord() {
   const rest = new REST({ version: '10' }).setToken(discordBotToken);
 
   try {
