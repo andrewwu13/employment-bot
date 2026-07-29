@@ -114,6 +114,27 @@ npm run test:watch
 npm run test:coverage
 ```
 
+`test/providers.test.js` runs offline against trimmed real API responses in
+`test/fixtures/`. Re-record a fixture when a provider changes shape.
+
+`test/database.test.js` exercises `DatabaseService` against the Firestore
+emulator and skips itself unless `FIRESTORE_EMULATOR_HOST` is set:
+
+```bash
+npx firebase emulators:start --only firestore --project demo-employment-bot
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm test
+```
+
+### Board canary
+
+Checks the live Greenhouse/Lever/Ashby/Workday APIs and exits non-zero if a
+board stops returning postings. Network-dependent, so it is not part of `npm
+test` - run it on a schedule or when the scraper looks wrong.
+
+```bash
+npm run check:boards
+```
+
 ## CLI Tool (apps/cli)
 
 A testing tool for scraping and email inspection. No database writes.

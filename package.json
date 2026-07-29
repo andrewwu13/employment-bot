@@ -7,7 +7,8 @@
     "discord:dev": "npm run dev --workspace=@apps/discord",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "check:boards": "node scripts/check-boards.js"
   },
   "type": "module",
   "devDependencies": {
