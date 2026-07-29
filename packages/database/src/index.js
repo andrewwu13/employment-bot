@@ -1,1 +1,1 @@
-export { DatabaseService } from './core/database-service.js';
+export { DatabaseService } from './database.js';

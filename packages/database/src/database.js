@@ -1,5 +1,5 @@
 // read and writes from the firebase DB
-import { db } from '../config/firebase-config.js';
+import { db } from './firebaseConfig.js';
 import { Job } from '@repo/shared';
 import { Logger } from '@repo/shared';
 
@@ -7,11 +7,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export class DatabaseService {
-  constructor() {
+  constructor() { }
 
-  }
-
-  // Helper to get the correct Firestore collection based on DEV_MODE
   _getCollection() {
     return process.env.DEV_MODE === 'true' ? 'test_postings' : 'job_postings';
   }
@@ -112,11 +109,9 @@ export class DatabaseService {
 
   async write(jobData) {
     try {
-      // convert to Job model object
-      // this essentially "cleans" the JSON as there will be a bunch of other info we don't need, maintains consistency
+      // convert to Job model object - this essentially "cleans" the JSON as there will be a bunch of other info we don't need, maintains consistency
       const job = jobData instanceof Job ? jobData : new Job(jobData);
 
-      // add to DB using firebase-admin syntax
       const docRef = await db.collection(this._getCollection()).add(job.toFirestore());
 
       Logger.info("Document written with ID: ", docRef.id);

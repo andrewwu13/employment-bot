@@ -16,7 +16,7 @@ const describeEmulator = emulatorHost ? describe : describe.skip;
 
 const PROJECT_ID = 'demo-employment-bot';
 
-// firebase-config.js calls cert(), which parses the private key even when the
+// firebaseConfig.js calls cert(), which parses the private key even when the
 // emulator makes it unused. A throwaway keypair satisfies it without shipping
 // anything credential-shaped in the repo.
 function fakeServiceAccount() {
