@@ -1,0 +1,23 @@
+{
+  "total": 2,
+  "jobPostings": [
+    {
+      "title": "Applied Deep Learning PhD Research Intern, Reinforcement Learning for LLMs - Fall 2026",
+      "externalPath": "/job/US-CA-Santa-Clara/Applied-Deep-Learning-PhD-Research-Intern--Reinforcement-Learning-for-LLMs---Fall-2026_JR2012398",
+      "locationsText": "US, CA, Santa Clara",
+      "postedOn": "Posted 30+ Days Ago",
+      "bulletFields": [
+        "JR2012398"
+      ]
+    },
+    {
+      "title": "DevOps Engineer",
+      "externalPath": "/job/Israel-Raanana/DevOps-Engineer_JR2020488",
+      "locationsText": "2 Locations",
+      "postedOn": "Posted Today",
+      "bulletFields": [
+        "JR2020488"
+      ]
+    }
+  ]
+}
