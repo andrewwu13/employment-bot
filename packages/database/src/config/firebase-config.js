@@ -1,6 +1,5 @@
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { getAuth } from 'firebase-admin/auth';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -32,7 +31,5 @@ const app = initializeApp({
 
 // Get the Firestore instance
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-// `auth` is unused — no code currently imports it
-export { db, auth };
+export { db };
