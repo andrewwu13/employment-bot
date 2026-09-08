@@ -85,5 +85,5 @@ src/
   index.js              # entry point: fetchBoard, fetchPosting + redirect routing
   providers.js          # ATS providers + PROVIDERS registry
   utils.js              # shared utils (unified Job, skills, fetchJson)
-  browser-fallback.js   # internal Playwright scraper (not exported)
+  browser.js            # internal Playwright scraper (not exported)
 ```

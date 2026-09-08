@@ -1,6 +1,6 @@
 // read and writes from the firebase DB
 import { db } from './firebaseConfig.js';
-import { Job } from '@repo/shared';
+import { toJobRecord } from '@repo/shared';
 import { Logger } from '@repo/shared';
 
 import dotenv from 'dotenv';
@@ -109,10 +109,7 @@ export class DatabaseService {
 
   async write(jobData) {
     try {
-      // convert to Job model object - this essentially "cleans" the JSON as there will be a bunch of other info we don't need, maintains consistency
-      const job = jobData instanceof Job ? jobData : new Job(jobData);
-
-      const docRef = await db.collection(this._getCollection()).add(job.toFirestore());
+      const docRef = await db.collection(this._getCollection()).add(toJobRecord(jobData));
 
       Logger.info("Document written with ID: ", docRef.id);
 

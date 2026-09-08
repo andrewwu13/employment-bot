@@ -1,5 +1,7 @@
+# Run with: docker compose up --build -d
+
 # Base stage for dependencies
-FROM mcr.microsoft.com/playwright:v1.56.1-noble AS base
+FROM mcr.microsoft.com/playwright:v1.61.1-noble AS base
 WORKDIR /app
 
 # Copy root and workspace manifests first so `npm install` resolves the
@@ -18,6 +20,5 @@ RUN npm install --omit=dev
 COPY apps/ ./apps/
 COPY packages/ ./packages/
 
-# Default command: the Discord bot is the single orchestration point
-# (fetch emails, scrape, persist, post) — see AGENTS.md.
-CMD ["npm", "run", "discord"]
+# Runs node directly because `npm run discord` passes --env-file=../../.env, which production doesn't have.
+CMD ["node", "apps/discord/src/index.js"]

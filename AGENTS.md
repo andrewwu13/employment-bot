@@ -99,7 +99,7 @@ The bot authenticates with Gmail via OAuth2. A one-time setup is required to obt
 4. Authorize the Google account that receives job emails.
 5. Copy the logged refresh token into `.env` as `GMAIL_REFRESH_TOKEN`.
 
-At runtime, `packages/email/src/gmail-config.js` creates the OAuth2 client and the `googleapis` library handles access token refresh automatically.
+At runtime, `packages/email/src/gmail.config.js` creates the OAuth2 client and the `googleapis` library handles access token refresh automatically.
 
 ### Testing
 

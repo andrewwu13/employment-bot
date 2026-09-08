@@ -5,8 +5,10 @@ services:
     build:
       context: .
       target: base
-    command: npm run discord
     env_file: .env
-    volumes:
-      - .:/app
-      - /app/node_modules
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

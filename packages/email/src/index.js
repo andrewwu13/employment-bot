@@ -1,2 +1,2 @@
-export { GmailService } from './gmail-service.js';
+export { GmailService } from './gmailService.js';
 export { startOAuthFlow } from './oauth-flow.js';
