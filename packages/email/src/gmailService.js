@@ -87,7 +87,7 @@ export class GmailService {
       });
 
       if (markAsRead) {
-        await gmail.users.messages.modify({
+        gmail.users.messages.modify({
           userId: "me",
           id: msg.id,
           requestBody: { removeLabelIds: ["UNREAD"] }
