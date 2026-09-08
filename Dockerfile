@@ -20,4 +20,7 @@ COPY packages/ ./packages/
 
 # Default command: the Discord bot is the single orchestration point
 # (fetch emails, scrape, persist, post) — see AGENTS.md.
-CMD ["npm", "run", "discord"]
+# Runs node directly (not `npm run discord`) because that script passes
+# --env-file=../../.env, which only exists via the dev bind-mount; in
+# production, compose's env_file already injects the vars into the process.
+CMD ["node", "apps/discord/src/index.js"]
