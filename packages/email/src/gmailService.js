@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import * as cheerio from 'cheerio';
 
 // gmail object created from OAuth process; can work with it now to read/send gmails
-import { gmail } from './gmail-config.js';
+import { gmail } from './gmail.config.js';
 import { Logger } from '@repo/shared';
 
 dotenv.config();
