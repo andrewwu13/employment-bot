@@ -5,7 +5,17 @@ services:
     build:
       context: .
       target: base
-    env_file: .env
+    environment:
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      APPLICATION_ID: ${APPLICATION_ID}
+      GUILD_ID: ${GUILD_ID}
+      JOB_CHANNEL_ID: ${JOB_CHANNEL_ID}
+      FIREBASE_ADMIN_CONFIG: ${FIREBASE_ADMIN_CONFIG}
+      GMAIL_CLIENT_ID: ${GMAIL_CLIENT_ID}
+      GMAIL_CLIENT_SECRET: ${GMAIL_CLIENT_SECRET}
+      GMAIL_REFRESH_TOKEN: ${GMAIL_REFRESH_TOKEN}
+      RUN_ON_STARTUP: ${RUN_ON_STARTUP:-true}
+      SCRAPE_COOLDOWN_MS: ${SCRAPE_COOLDOWN_MS:-1000}
     restart: unless-stopped
     logging:
       driver: json-file
